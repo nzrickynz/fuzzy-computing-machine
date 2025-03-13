@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Braindrop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <!-- User Menu -->
+    <div class="user-menu">
+      <button class="user-menu-button" id="user-menu-button">
+        <span id="user-email">user@example.com</span>
+        <svg width="12" height="12" viewBox="0 0 12 12">
+          <path d="M2 4L6 8L10 4" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <div class="user-menu-dropdown" id="user-menu-dropdown">
+        <div class="user-menu-item" id="settings-button">
+          <svg width="16" height="16" viewBox="0 0 16 16">
+            <path d="M8 10a2 2 0 100-4 2 2 0 000 4z" fill="currentColor"/>
+            <path d="M14.5 8c0-.23-.02-.45-.05-.67l1.48-1.48a.35.35 0 00.04-.44l-1.4-2.42a.35.35 0 00-.43-.16l-1.74.7a5.1 5.1 0 00-1.17-.67L11 1.47a.35.35 0 00-.35-.3h-2.8a.35.35 0 00-.35.3l-.23 1.84a5.1 5.1 0 00-1.17.68l-1.74-.7a.35.35 0 00-.43.16l-1.4 2.42a.35.35 0 00.04.44l1.48 1.48a5.3 5.3 0 000 1.34l-1.48 1.48a.35.35 0 00-.04.44l1.4 2.42c.1.16.3.22.43.16l1.74-.7c.36.28.75.5 1.17.67l.23 1.84c.03.17.18.3.35.3h2.8c.17 0 .32-.13.35-.3l.23-1.84c.42-.17.81-.39 1.17-.67l1.74.7c.16.06.34 0 .43-.16l1.4-2.42a.35.35 0 00-.04-.44l-1.48-1.48a5.3 5.3 0 000-1.34z" fill="currentColor"/>
+          </svg>
+          Settings
+        </div>
+        <div class="user-menu-item danger" id="logout-button">
+          <svg width="16" height="16" viewBox="0 0 16 16">
+            <path d="M12 8.5l-4 4v-3H3v-2h5v-3l4 4z" fill="currentColor"/>
+            <path d="M11 2H5a2 2 0 00-2 2v2h2V4h6v8H5v-2H3v2a2 2 0 002 2h6a2 2 0 002-2V4a2 2 0 00-2-2z" fill="currentColor"/>
+          </svg>
+          Log Out
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div id="filters">
+        <h2>Filters</h2>
+      </div>
+      <div id="projects">
+        <h2>Projects</h2>
+      </div>
+    </div>
+    <div class="main-content">
+      <form id="stash-form">
+        <div class="input-container">
+          <textarea id="stash-text" placeholder="Enter stash and hashtags"></textarea>
+          <div id="pill-display"></div>
+        </div>
+        <button type="submit">Drop it!</button>
+      </form>
+      <div id="result-list"></div>
+    </div>
+  </div>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html> 

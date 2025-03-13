@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Account Settings - Braindrop</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="settings-container">
+    <div class="auth-form">
+      <h1>Account Settings</h1>
+      <div class="form-group">
+        <label for="settings-email">Email</label>
+        <input type="email" id="settings-email" required>
+      </div>
+      <div class="form-group">
+        <label for="settings-password">New Password (optional)</label>
+        <input type="password" id="settings-password">
+      </div>
+      <div id="settings-error" class="auth-error"></div>
+      <div class="button-group">
+        <button type="button" id="settings-save" class="primary-button">Save Changes</button>
+        <button type="button" id="settings-cancel" class="secondary-button">Back to Dashboard</button>
+      </div>
+    </div>
+  </div>
+  <script src="js/settings.js"></script>
+</body>
+</html> 
