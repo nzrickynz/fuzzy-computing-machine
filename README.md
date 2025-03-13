@@ -23,8 +23,8 @@ A modern web application for managing and organizing your text snippets, hashtag
 
 1. Clone the repository
 ```bash
-git clone [your-repo-url]
-cd stashio
+git clone https://github.com/nzrickynz/fuzzy-computing-machine.git
+cd fuzzy-computing-machine
 ```
 
 2. Install dependencies
