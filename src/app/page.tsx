@@ -41,11 +41,11 @@ export default function HomePage() {
       <section className="px-4 py-20 mx-auto max-w-7xl sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl">
-            <span className="block">Your Personal</span>
-            <span className="block text-indigo-400">Code for Thoughts</span>
+            <span className="block">Never Lose Another</span>
+            <span className="block text-indigo-400">Brilliant Idea</span>
           </h1>
           <p className="max-w-md mx-auto mt-3 text-base text-gray-300 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-            BrainRepo is your digital repository for capturing thoughts, ideas, and tasks instantly. Version control for your mind.
+            BrainRepo is your digital brain for capturing thoughts, ideas, and tasks instantly. Perfect for busy professionals who don't want to miss a thing.
           </p>
           <div className="mt-5 max-w-md mx-auto sm:flex sm:justify-center md:mt-8">
             <div className="rounded-md shadow">
@@ -53,7 +53,7 @@ export default function HomePage() {
                 href="/signup"
                 className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
               >
-                Start Your Repository
+                Get Started Free
               </Link>
             </div>
           </div>
@@ -68,7 +68,7 @@ export default function HomePage() {
             <div className="p-6 border border-gray-700 rounded-lg">
               <h3 className="text-xl font-bold text-indigo-400 mb-4">For Agencies</h3>
               <p className="text-gray-300">
-                Create branches of ideas for each client. Tag thoughts with #client-name and @team-members for seamless collaboration. Your client insights, perfectly versioned.
+                Capture client suggestions on the fly, track action items for reports, and tag ideas with #client-name for easy filtering. Never miss a valuable insight during client meetings.
               </p>
             </div>
 
@@ -76,7 +76,7 @@ export default function HomePage() {
             <div className="p-6 border border-gray-700 rounded-lg">
               <h3 className="text-xl font-bold text-indigo-400 mb-4">For Business Leaders</h3>
               <p className="text-gray-300">
-                Commit your thoughts to a secure repository. Branch out strategies, merge insights, and keep your mental workspace clean and organized.
+                Stay on top of everything when you're spread thin. Quickly capture tasks, ideas, and follow-ups. Keep your mind clear and focused on what matters most.
               </p>
             </div>
 
@@ -84,7 +84,7 @@ export default function HomePage() {
             <div className="p-6 border border-gray-700 rounded-lg">
               <h3 className="text-xl font-bold text-indigo-400 mb-4">For Entrepreneurs</h3>
               <p className="text-gray-300">
-                Push ideas as they come, pull them when you need them. Build your innovation repository with tags like #startup-idea or #product-feature.
+                Turn your constant stream of ideas into organized action items. Use tags like #startup-idea or #product-feature to build your innovation library.
               </p>
             </div>
           </div>
@@ -98,23 +98,23 @@ export default function HomePage() {
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-indigo-400 mb-2">1</div>
-              <h3 className="text-xl font-semibold mb-2">Commit Thoughts</h3>
-              <p className="text-gray-300">Push your ideas into your personal repository</p>
+              <h3 className="text-xl font-semibold mb-2">Brain Dump</h3>
+              <p className="text-gray-300">Quickly capture your thoughts without interrupting your flow</p>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-indigo-400 mb-2">2</div>
-              <h3 className="text-xl font-semibold mb-2">Branch & Tag</h3>
-              <p className="text-gray-300">Organize with #tags and @mentions</p>
+              <h3 className="text-xl font-semibold mb-2">Tag & Organize</h3>
+              <p className="text-gray-300">Use #tags and @mentions to categorize your thoughts</p>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-indigo-400 mb-2">3</div>
-              <h3 className="text-xl font-semibold mb-2">Search & Pull</h3>
-              <p className="text-gray-300">Find and retrieve ideas instantly</p>
+              <h3 className="text-xl font-semibold mb-2">Filter & Find</h3>
+              <p className="text-gray-300">Easily retrieve ideas when you need them</p>
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-indigo-400 mb-2">4</div>
-              <h3 className="text-xl font-semibold mb-2">Merge & Execute</h3>
-              <p className="text-gray-300">Transform thoughts into actionable results</p>
+              <h3 className="text-xl font-semibold mb-2">Take Action</h3>
+              <p className="text-gray-300">Turn your captured thoughts into reality</p>
             </div>
           </div>
         </div>
@@ -123,15 +123,15 @@ export default function HomePage() {
       {/* CTA Section */}
       <section className="py-20 bg-indigo-600">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-extrabold mb-8">Initialize Your Brain Repository</h2>
+          <h2 className="text-3xl font-extrabold mb-8">Start Capturing Your Ideas Today</h2>
           <p className="text-xl mb-8 max-w-2xl mx-auto">
-            Join the growing community of professionals who version control their thoughts at brainrepo.io
+            Join thousands of professionals who trust BrainRepo to keep their ideas safe and organized.
           </p>
           <Link
             href="/signup"
             className="inline-block px-8 py-3 border-2 border-white text-lg font-medium rounded-md text-white hover:bg-white hover:text-indigo-600 transition-colors"
           >
-            Create Your Repo - It's Free
+            Sign Up Now - It's Free
           </Link>
         </div>
       </section>
