@@ -6,14 +6,12 @@
   "framework": "nextjs",
   "git": {
     "deploymentEnabled": {
-      "main": true,
-      "staging": true
+      "main": true
     }
   },
   "env": {
     "NEXTAUTH_URL": {
       "development": "http://localhost:3000",
-      "preview": "https://staging.brainrepo.io",
       "production": "https://brainrepo.io"
     }
   }
