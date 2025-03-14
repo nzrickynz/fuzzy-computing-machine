@@ -4,6 +4,8 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { createToken } from '@/lib/auth';
 
+export const runtime = 'nodejs';
+
 export async function POST(request: Request) {
   try {
     const { email, password } = await request.json();
@@ -30,7 +32,7 @@ export async function POST(request: Request) {
     });
 
     // Create and set auth token
-    const token = await createToken({ userId: user.id });
+    const token = await createToken(user.id);
     cookies().set('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

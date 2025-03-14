@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { LoginSchema } from '@/types/auth';
 import { prisma } from '@/lib/db';
 import { comparePasswords, createToken, setUserCookie } from '@/lib/auth';
+
+export const runtime = 'nodejs';
 
 export async function POST(request: Request) {
   try {
