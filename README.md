@@ -2,6 +2,10 @@
 
 Your digital brain for capturing thoughts, ideas, and tasks instantly.
 
+## About
+
+BrainRepo helps you capture and organize your thoughts efficiently, ensuring no brilliant idea ever gets lost.
+
 ## Development Setup
 
 1. Clone the repository
