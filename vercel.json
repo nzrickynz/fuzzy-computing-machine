@@ -8,11 +8,5 @@
     "deploymentEnabled": {
       "main": true
     }
-  },
-  "env": {
-    "NEXTAUTH_URL": {
-      "development": "http://localhost:3000",
-      "production": "https://brainrepo.io"
-    }
   }
 } 
