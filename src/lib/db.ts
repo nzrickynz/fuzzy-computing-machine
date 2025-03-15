@@ -1,22 +1,39 @@
 import { PrismaClient } from '@prisma/client';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+declare global {
+  var prisma: PrismaClient | undefined;
+}
 
-// Use pooled connection for runtime
-const prismaClientSingleton = () => {
-  return new PrismaClient({
-    datasources: {
-      db: {
-        url: process.env.POSTGRES_PRISMA_URL
-      }
-    }
-  });
-};
-
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
+export const prisma = globalThis.prisma || new PrismaClient({
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL
+    },
+  },
+});
 
 if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
+  globalThis.prisma = prisma;
+}
+
+// Handle cleanup on exit
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});
+
+export async function connectDB() {
+  try {
+    await prisma.$connect();
+  } catch (error) {
+    console.error('Error connecting to the database:', error);
+    // Attempt to reconnect once
+    try {
+      await prisma.$disconnect();
+      await prisma.$connect();
+    } catch (retryError) {
+      console.error('Failed to reconnect to the database:', retryError);
+      throw retryError;
+    }
+  }
 } 

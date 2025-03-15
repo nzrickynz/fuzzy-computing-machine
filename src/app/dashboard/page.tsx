@@ -38,36 +38,45 @@ async function getStashes(searchParams: { [key: string]: string | string[] | und
   const tags = searchParams.tags ? (Array.isArray(searchParams.tags) ? searchParams.tags : [searchParams.tags]) : [];
   const projects = searchParams.projects ? (Array.isArray(searchParams.projects) ? searchParams.projects : [searchParams.projects]) : [];
 
-  const stashes = await prisma.stash.findMany({
-    where: {
-      userId: payload.userId,
-      ...(tags.length > 0 && {
-        hashtags: {
-          some: {
-            name: {
-              in: tags,
+  try {
+    await prisma.$connect();
+    
+    const stashes = await prisma.stash.findMany({
+      where: {
+        userId: payload.userId,
+        ...(tags.length > 0 && {
+          hashtags: {
+            some: {
+              name: {
+                in: tags,
+              },
             },
           },
-        },
-      }),
-      ...(projects.length > 0 && {
-        projects: {
-          some: {
-            name: {
-              in: projects,
+        }),
+        ...(projects.length > 0 && {
+          projects: {
+            some: {
+              name: {
+                in: projects,
+              },
             },
           },
-        },
-      }),
-    },
-    include: {
-      hashtags: true,
-      projects: true,
-    },
-    orderBy: { createdAt: 'desc' },
-  });
+        }),
+      },
+      include: {
+        hashtags: true,
+        projects: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
 
-  return stashes as Stash[];
+    return stashes as Stash[];
+  } catch (error) {
+    console.error('Error fetching stashes:', error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 export default async function DashboardPage({
