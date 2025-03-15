@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "DATABASE_URL=\"postgresql://postgres:.gZ9y&bb7v.63qX@db.xuuufzuzubnvvsbgvemc.supabase.co:5432/postgres\" prisma generate && DATABASE_URL=\"postgresql://postgres:.gZ9y&bb7v.63qX@db.xuuufzuzubnvvsbgvemc.supabase.co:5432/postgres\" prisma db push && next build",
+    "build": "prisma generate && prisma db push && next build",
     "start": "next start",
     "lint": "next lint"
   },
