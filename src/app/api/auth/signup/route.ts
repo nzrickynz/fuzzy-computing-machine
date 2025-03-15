@@ -4,13 +4,18 @@ import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { createToken } from '@/lib/auth';
 
+// Force Node.js runtime
 export const runtime = 'nodejs';
+export const preferredRegion = 'iad1'; // US East (N. Virginia)
 
 export async function POST(request: Request) {
   try {
     console.log('Starting signup process...');
     const { email, password } = await request.json();
     console.log('Received signup request for email:', email);
+
+    // Log environment variables (without sensitive data)
+    console.log('Database connection check - URL exists:', !!process.env.POSTGRES_PRISMA_URL);
 
     try {
       // Test database connection
