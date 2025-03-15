@@ -37,7 +37,10 @@ export async function POST(request: Request) {
     const token = await createToken(user.id);
     await setUserCookie(token);
 
-    return NextResponse.json({ message: 'Login successful' });
+    return NextResponse.json({ 
+      message: 'Login successful',
+      redirect: '/dashboard'
+    });
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

@@ -64,4 +64,17 @@ export async function setUserCookie(token: string) {
 
 export async function removeUserCookie() {
   cookies().delete('token');
+}
+
+export async function getAuthStatus() {
+  try {
+    const token = cookies().get('token')?.value;
+    if (!token) return null;
+
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
+    const { payload } = await jwtVerify(token, secret);
+    return payload;
+  } catch (error) {
+    return null;
+  }
 } 

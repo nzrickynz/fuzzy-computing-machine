@@ -66,7 +66,10 @@ export async function POST(request: Request) {
     });
     console.log('Authentication token set');
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ 
+      success: true,
+      redirect: '/dashboard'
+    });
   } catch (error) {
     console.error('Signup error:', error);
     // Log additional error details
