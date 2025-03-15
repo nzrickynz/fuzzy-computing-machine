@@ -6,13 +6,11 @@
 
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-  schemas  = ["public"]
 }
 
 model User {
@@ -22,8 +20,6 @@ model User {
   stashes  Stash[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@schema("public")
 }
 
 model Stash {
@@ -36,22 +32,16 @@ model Stash {
   usedAt    DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
-
-  @@schema("public")
 }
 
 model Hashtag {
   id      String  @id @default(cuid())
   name    String
   stashes Stash[]
-
-  @@schema("public")
 }
 
 model Project {
   id      String  @id @default(cuid())
   name    String
   stashes Stash[]
-
-  @@schema("public")
 }
