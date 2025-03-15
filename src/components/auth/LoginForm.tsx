@@ -25,12 +25,17 @@ export function LoginForm() {
         body: JSON.stringify(data),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
+        throw new Error(result.message || 'Login failed');
       }
 
-      router.push('/dashboard');
+      if (result.redirect) {
+        router.push(result.redirect);
+      } else {
+        router.push('/dashboard'); // Fallback redirect
+      }
     } catch (error) {
       console.error('Login failed:', error);
       // Handle error (show toast, etc.)

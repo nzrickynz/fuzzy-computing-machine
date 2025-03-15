@@ -26,12 +26,17 @@ export function SignupForm() {
         body: JSON.stringify(data),
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
+        throw new Error(result.message || 'Signup failed');
       }
 
-      router.push('/dashboard');
+      if (result.redirect) {
+        router.push(result.redirect);
+      } else {
+        router.push('/dashboard'); // Fallback redirect
+      }
     } catch (error) {
       console.error('Signup failed:', error);
       // Handle error (show toast, etc.)
