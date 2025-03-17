@@ -39,8 +39,6 @@ async function getStashes(searchParams: { [key: string]: string | string[] | und
   const projects = searchParams.projects ? (Array.isArray(searchParams.projects) ? searchParams.projects : [searchParams.projects]) : [];
 
   try {
-    await prisma.$connect();
-    
     const stashes = await prisma.stash.findMany({
       where: {
         userId: payload.userId,
@@ -74,8 +72,6 @@ async function getStashes(searchParams: { [key: string]: string | string[] | und
   } catch (error) {
     console.error('Error fetching stashes:', error);
     throw error;
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
