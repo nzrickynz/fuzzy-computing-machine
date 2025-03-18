@@ -36,12 +36,12 @@ model Stash {
 
 model Hashtag {
   id      String  @id @default(cuid())
-  name    String
+  name    String  @unique
   stashes Stash[]
 }
 
 model Project {
   id      String  @id @default(cuid())
-  name    String
+  name    String  @unique
   stashes Stash[]
 }
