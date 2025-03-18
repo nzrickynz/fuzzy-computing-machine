@@ -1,15 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { getUser } from '@/lib/auth';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { Prisma } from '@prisma/client';
 
-interface AuthPayload {
-  userId: string;
+async function getUser() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
 }
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUser() as AuthPayload | null;
+    const user = await getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -19,7 +45,7 @@ export async function GET(request: NextRequest) {
     const project = searchParams.get('project');
 
     const where: Prisma.StashWhereInput = {
-      userId: user.userId,
+      userId: user.id,
       ...(tag && {
         hashtags: {
           some: { name: tag }
@@ -53,7 +79,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUser() as AuthPayload | null;
+    const user = await getUser();
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -71,7 +97,7 @@ export async function POST(request: NextRequest) {
     const stash = await prisma.stash.create({
       data: {
         text,
-        userId: user.userId,
+        userId: user.id,
         hashtags: {
           create: hashtags.map(name => ({ name }))
         },

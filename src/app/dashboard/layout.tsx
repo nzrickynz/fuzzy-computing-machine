@@ -1,43 +1,35 @@
 import React from 'react';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { UserMenu } from '@/components/shared/UserMenu';
-import { verifyToken } from '@/lib/auth';
-import { prisma } from '@/lib/db';
 
 async function getUser() {
   try {
-    const token = cookies().get('token')?.value;
-    if (!token) {
-      console.log('No token found');
-      return null;
-    }
-
-    const payload = await verifyToken(token);
-    if (!payload) {
-      console.log('Invalid token payload');
-      return null;
-    }
-
-    console.log('Payload received:', payload);
-    
-    // Ensure userId is a string
-    if (typeof payload.userId !== 'string') {
-      console.log('userId is not a string:', payload.userId);
-      return null;
-    }
-
-    const user = await prisma.user.findUnique({
-      where: {
-        id: payload.userId
-      },
-      select: {
-        email: true
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set({ name, value, ...options });
+          },
+          remove(name: string, options: any) {
+            cookieStore.set({ name, value: '', ...options });
+          },
+        },
       }
-    });
+    );
 
-    if (!user) {
-      console.log('No user found with id:', payload.userId);
+    const { data: { user }, error } = await supabase.auth.getUser();
+    
+    if (error || !user) {
+      console.log('No user found or error:', error);
+      return null;
     }
 
     return user;
@@ -63,7 +55,7 @@ export default async function DashboardLayout({
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold text-white">Stashio</h1>
-            <UserMenu email={user.email} />
+            <UserMenu email={user.email!} />
           </div>
         </div>
       </header>
