@@ -4,15 +4,16 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+const prismaClientSingleton = () => {
+  return new PrismaClient({
     log: [
-      { level: 'query', emit: 'event' },
       { level: 'error', emit: 'stdout' },
       { level: 'warn', emit: 'stdout' },
     ],
   });
+};
+
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 // Add detailed query logging
 prisma.$on('query' as never, (e: Prisma.QueryEvent) => {
@@ -21,7 +22,7 @@ prisma.$on('query' as never, (e: Prisma.QueryEvent) => {
   if (e.params) console.log('Params: ' + e.params);
 });
 
-// Add error handling
+// Add error handling middleware
 prisma.$use(async (params, next) => {
   const before = Date.now();
   try {
@@ -31,6 +32,13 @@ prisma.$use(async (params, next) => {
     return result;
   } catch (error) {
     console.error(`[Prisma Error] ${params.model}.${params.action} failed:`, error);
+    // Log connection details on error (sanitized)
+    if (error instanceof Prisma.PrismaClientInitializationError) {
+      console.error('[Database] Connection configuration:', {
+        url: process.env.POSTGRES_PRISMA_URL ? 'Set' : 'Not set',
+        nodeEnv: process.env.NODE_ENV,
+      });
+    }
     throw error;
   }
 });
