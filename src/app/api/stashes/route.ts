@@ -79,13 +79,21 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('POST request started');
+    
     const user = await getUser();
+    console.log('User auth check result:', user ? 'authenticated' : 'not authenticated');
+    
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { text } = await request.json();
+    const body = await request.json();
+    console.log('Request body:', body);
+    
+    const { text } = body;
     if (!text || typeof text !== 'string') {
+      console.log('Invalid input - text:', text);
       return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
     }
 
@@ -93,35 +101,29 @@ export async function POST(request: NextRequest) {
     const hashtags = Array.from(text.matchAll(/#[\w-]+/g)).map(match => match[0].slice(1));
     const projects = Array.from(text.matchAll(/@[\w-]+/g)).map(match => match[0].slice(1));
 
-    console.log('Creating stash with:', { text, hashtags, projects, userId: user.id });
+    console.log('Extracted data:', { 
+      text, 
+      hashtags, 
+      projects, 
+      userId: user.id 
+    });
 
     // Create stash with hashtags and projects
+    console.log('Attempting to create stash in database...');
     const stash = await prisma.stash.create({
       data: {
         text,
-        user: {
-          connect: {
-            id: user.id
-          }
-        },
+        userId: user.id,
         hashtags: {
           connectOrCreate: hashtags.map(name => ({
-            where: {
-              name
-            } as Prisma.HashtagWhereUniqueInput,
-            create: {
-              name
-            }
+            where: { name } as Prisma.HashtagWhereUniqueInput,
+            create: { name }
           }))
         },
         projects: {
           connectOrCreate: projects.map(name => ({
-            where: {
-              name
-            } as Prisma.ProjectWhereUniqueInput,
-            create: {
-              name
-            }
+            where: { name } as Prisma.ProjectWhereUniqueInput,
+            create: { name }
           }))
         }
       },
@@ -134,14 +136,19 @@ export async function POST(request: NextRequest) {
     console.log('Stash created successfully:', stash);
     return NextResponse.json(stash);
   } catch (error) {
-    console.error('Detailed error creating stash:', error);
-    // Check if it's a Prisma error with a code
-    if (error instanceof Error && 'code' in error) {
-      const prismaError = error as { code: string; message: string };
+    console.error('Detailed error in POST /api/stashes:', error);
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      console.error('Prisma error code:', error.code);
+      console.error('Prisma error message:', error.message);
       return NextResponse.json(
-        { error: `Database error: ${prismaError.message}` },
+        { error: `Database error: ${error.message}` },
         { status: 500 }
       );
+    }
+    if (error instanceof Error) {
+      console.error('Error name:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
     }
     return NextResponse.json(
       { error: 'Internal server error' },
