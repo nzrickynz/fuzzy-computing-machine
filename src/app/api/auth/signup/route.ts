@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { createToken } from '@/lib/auth';
+import { SignJWT } from 'jose';
+import { getJwtSecretKey } from '@/lib/auth';
 
 // Force Node.js runtime
 export const runtime = 'nodejs';
@@ -10,87 +12,75 @@ export const preferredRegion = 'iad1'; // US East (N. Virginia)
 
 export async function POST(request: Request) {
   try {
-    console.log('Starting signup process...');
-    const { email, password } = await request.json();
-    console.log('Received signup request for email:', email);
+    console.log('[Signup] Starting signup process');
+    const body = await request.json();
+    console.log('[Signup] Email:', body.email);
 
-    // Log environment variables (without sensitive data)
-    console.log('Database connection check - URL exists:', !!process.env.POSTGRES_PRISMA_URL);
-
-    try {
-      // Test database connection
-      console.log('Testing database connection...');
-      await prisma.$connect();
-      console.log('Database connection successful');
-    } catch (dbError) {
-      console.error('Database connection error:', dbError);
-      return NextResponse.json(
-        { error: 'Database connection failed', details: dbError },
-        { status: 500 }
-      );
-    }
-
-    // Check if user already exists
-    console.log('Checking for existing user...');
+    // Check if user exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: body.email },
     });
 
     if (existingUser) {
-      console.log('User already exists');
+      console.log('[Signup] User already exists:', body.email);
       return NextResponse.json(
-        { error: 'Email already registered' },
+        { message: 'User already exists' },
         { status: 400 }
       );
     }
 
-    // Hash password and create user
-    console.log('Creating new user...');
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-      },
-    });
-    console.log('User created successfully');
+    // Hash password
+    const hashedPassword = await bcrypt.hash(body.password, 12);
 
-    // Create and set auth token
-    console.log('Generating authentication token...');
-    const token = await createToken(user.id);
-    cookies().set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-    });
-    console.log('Authentication token set');
+    // Create user
+    try {
+      const user = await prisma.user.create({
+        data: {
+          email: body.email,
+          password: hashedPassword,
+        },
+      });
+      console.log('[Signup] Created user:', body.email);
 
-    return NextResponse.json({ 
-      success: true,
-      redirect: '/dashboard'
-    });
-  } catch (error) {
-    console.error('Signup error:', error);
-    // Log additional error details
-    if (error instanceof Error) {
-      console.error('Error name:', error.name);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
+      // Generate token
+      try {
+        const token = await new SignJWT({ userId: user.id })
+          .setProtectedHeader({ alg: 'HS256' })
+          .setExpirationTime('24h')
+          .sign(getJwtSecretKey());
+
+        // Set cookie
+        cookies().set('token', token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 86400, // 24 hours
+        });
+
+        console.log('[Signup] Successfully registered user:', body.email);
+        return NextResponse.json({
+          message: 'User created successfully',
+          redirect: '/dashboard'
+        });
+      } catch (error) {
+        console.error('[Signup] Token generation failed:', error);
+        return NextResponse.json(
+          { message: 'Authentication failed' },
+          { status: 500 }
+        );
+      }
+    } catch (error) {
+      console.error('[Signup] User creation failed:', error);
+      return NextResponse.json(
+        { message: 'Failed to create user' },
+        { status: 500 }
+      );
     }
+  } catch (error) {
+    console.error('[Signup] Unexpected error:', error);
     return NextResponse.json(
-      { 
-        error: 'Failed to create account',
-        details: error instanceof Error ? error.message : String(error)
-      },
+      { message: 'An unexpected error occurred' },
       { status: 500 }
     );
-  } finally {
-    try {
-      await prisma.$disconnect();
-      console.log('Database connection closed');
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError);
-    }
   }
 } 

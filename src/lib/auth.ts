@@ -24,27 +24,37 @@ export async function createToken(userId: string) {
     .sign(secret);
 }
 
+export function getJwtSecretKey() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT Secret key is not set');
+  }
+  return new TextEncoder().encode(secret);
+}
+
 export async function verifyToken(token: string) {
   try {
-    const verified = await jwtVerify(token, secret);
-    // Log the payload to see its structure
-    console.log('Token payload:', verified.payload);
-    // Ensure we're getting a string
-    if (typeof verified.payload.userId !== 'string') {
-      console.log('userId is not a string:', verified.payload.userId);
-      return null;
-    }
-    return { userId: verified.payload.userId as string };
+    const { payload } = await jwtVerify(token, getJwtSecretKey());
+    return payload;
   } catch (error) {
-    console.error('Token verification error:', error);
+    console.error('[Auth] Token verification failed:', error);
     return null;
   }
 }
 
 export async function getUser() {
-  const token = cookies().get('token')?.value;
-  if (!token) return null;
-  return await verifyToken(token);
+  try {
+    const token = cookies().get('token')?.value;
+    if (!token) return null;
+
+    const payload = await verifyToken(token);
+    if (!payload) return null;
+
+    return payload;
+  } catch (error) {
+    console.error('[Auth] Get user failed:', error);
+    return null;
+  }
 }
 
 export async function getToken(request: NextRequest) {
