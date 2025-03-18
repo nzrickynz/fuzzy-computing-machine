@@ -1,65 +1,68 @@
 'use client';
 
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { SignupSchema, type SignupInput } from '@/types/auth';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/shared/Button';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export function SignupForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<SignupInput>({
-    resolver: zodResolver(SignupSchema),
-  });
 
-  const onSubmit = async (data: SignupInput) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    setLoading(true);
+
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Signup failed');
-      }
-
-      if (result.redirect) {
-        router.push(result.redirect);
-      } else {
-        router.push('/dashboard'); // Fallback redirect
+      if (error) {
+        setError(error.message);
+      } else if (data?.user) {
+        // Show success message or redirect to verification page
+        router.push('/auth/verify-email');
       }
     } catch (error) {
-      console.error('Signup failed:', error);
-      // Handle error (show toast, etc.)
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="card p-6 space-y-6">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
             Email
           </label>
           <input
-            {...register('email')}
             type="email"
             id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="input-field"
             placeholder="Enter your email"
+            required
           />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
-          )}
         </div>
 
         <div>
@@ -67,15 +70,14 @@ export function SignupForm() {
             Password
           </label>
           <input
-            {...register('password')}
             type="password"
             id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="input-field"
             placeholder="Enter your password"
+            required
           />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
-          )}
         </div>
 
         <div>
@@ -83,18 +85,21 @@ export function SignupForm() {
             Confirm Password
           </label>
           <input
-            {...register('confirmPassword')}
             type="password"
             id="confirmPassword"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             className="input-field"
             placeholder="Confirm your password"
+            required
           />
-          {errors.confirmPassword && (
-            <p className="mt-1 text-sm text-red-500">{errors.confirmPassword.message}</p>
-          )}
         </div>
 
-        <Button type="submit" isLoading={isSubmitting} className="btn-primary">
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
+
+        <Button type="submit" isLoading={loading} className="btn-primary">
           Create Account
         </Button>
 

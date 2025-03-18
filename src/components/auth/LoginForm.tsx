@@ -1,64 +1,58 @@
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { LoginSchema, type LoginInput } from '@/types/auth';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/shared/Button';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 export function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<LoginInput>({
-    resolver: zodResolver(LoginSchema),
-  });
 
-  const onSubmit = async (data: LoginInput) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Login failed');
-      }
-
-      if (result.redirect) {
-        router.push(result.redirect);
-      } else {
-        router.push('/dashboard'); // Fallback redirect
+      if (error) {
+        setError(error.message);
+      } else if (data?.user) {
+        router.push('/dashboard');
+        router.refresh();
       }
     } catch (error) {
-      console.error('Login failed:', error);
-      // Handle error (show toast, etc.)
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSubmit(onSubmit)} className="card p-6 space-y-6">
+      <form onSubmit={handleSubmit} className="card p-6 space-y-6">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
             Email
           </label>
           <input
-            {...register('email')}
             type="email"
             id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="input-field"
             placeholder="Enter your email"
+            required
           />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>
-          )}
         </div>
 
         <div>
@@ -66,18 +60,21 @@ export function LoginForm() {
             Password
           </label>
           <input
-            {...register('password')}
             type="password"
             id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="input-field"
             placeholder="Enter your password"
+            required
           />
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>
-          )}
         </div>
 
-        <Button type="submit" isLoading={isSubmitting} className="btn-primary">
+        {error && (
+          <p className="text-sm text-red-500">{error}</p>
+        )}
+
+        <Button type="submit" isLoading={loading} className="btn-primary">
           Sign In
         </Button>
 
