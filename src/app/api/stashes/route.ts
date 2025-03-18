@@ -93,16 +93,32 @@ export async function POST(request: NextRequest) {
     const hashtags = Array.from(text.matchAll(/#[\w-]+/g)).map(match => match[0].slice(1));
     const projects = Array.from(text.matchAll(/@[\w-]+/g)).map(match => match[0].slice(1));
 
+    console.log('Creating stash with:', { text, hashtags, projects, userId: user.id });
+
     // Create stash with hashtags and projects
     const stash = await prisma.stash.create({
       data: {
         text,
         userId: user.id,
         hashtags: {
-          create: hashtags.map(name => ({ name }))
+          connectOrCreate: hashtags.map(tagName => ({
+            where: {
+              name: tagName // Using name as the unique identifier
+            },
+            create: {
+              name: tagName
+            }
+          }))
         },
         projects: {
-          create: projects.map(name => ({ name }))
+          connectOrCreate: projects.map(projectName => ({
+            where: {
+              name: projectName // Using name as the unique identifier
+            },
+            create: {
+              name: projectName
+            }
+          }))
         }
       },
       include: {
@@ -111,9 +127,18 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    console.log('Stash created successfully:', stash);
     return NextResponse.json(stash);
   } catch (error) {
-    console.error('Error creating stash:', error);
+    console.error('Detailed error creating stash:', error);
+    // Check if it's a Prisma error with a code
+    if (error instanceof Error && 'code' in error) {
+      const prismaError = error as { code: string; message: string };
+      return NextResponse.json(
+        { error: `Database error: ${prismaError.message}` },
+        { status: 500 }
+      );
+    }
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
