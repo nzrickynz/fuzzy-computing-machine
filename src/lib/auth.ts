@@ -3,8 +3,6 @@ import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
-
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, 10);
 }
@@ -16,7 +14,17 @@ export async function comparePasswords(
   return bcrypt.compare(password, hashedPassword);
 }
 
+export function getJwtSecretKey() {
+  const secret = process.env.JWT_SECRET;
+  if (!secret || secret.length < 32) {
+    console.error('[Auth] JWT secret is not properly configured');
+    throw new Error('JWT Secret key is not properly configured');
+  }
+  return new TextEncoder().encode(secret);
+}
+
 export async function createToken(userId: string) {
+  const secret = getJwtSecretKey();
   return await new SignJWT({ userId })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
@@ -24,17 +32,10 @@ export async function createToken(userId: string) {
     .sign(secret);
 }
 
-export function getJwtSecretKey() {
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    throw new Error('JWT Secret key is not set');
-  }
-  return new TextEncoder().encode(secret);
-}
-
 export async function verifyToken(token: string) {
   try {
-    const { payload } = await jwtVerify(token, getJwtSecretKey());
+    const secret = getJwtSecretKey();
+    const { payload } = await jwtVerify(token, secret);
     return payload;
   } catch (error) {
     console.error('[Auth] Token verification failed:', error);
@@ -69,6 +70,7 @@ export async function setUserCookie(token: string) {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     maxAge: 60 * 60 * 24, // 24 hours
+    path: '/',
   });
 }
 
@@ -81,10 +83,9 @@ export async function getAuthStatus() {
     const token = cookies().get('token')?.value;
     if (!token) return null;
 
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
-    const { payload } = await jwtVerify(token, secret);
-    return payload;
+    return await verifyToken(token);
   } catch (error) {
+    console.error('[Auth] Get auth status failed:', error);
     return null;
   }
 } 
