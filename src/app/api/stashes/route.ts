@@ -99,24 +99,28 @@ export async function POST(request: NextRequest) {
     const stash = await prisma.stash.create({
       data: {
         text,
-        userId: user.id,
+        user: {
+          connect: {
+            id: user.id
+          }
+        },
         hashtags: {
-          connectOrCreate: hashtags.map(tagName => ({
+          connectOrCreate: hashtags.map(name => ({
             where: {
-              name: tagName // Using name as the unique identifier
-            },
+              name
+            } as Prisma.HashtagWhereUniqueInput,
             create: {
-              name: tagName
+              name
             }
           }))
         },
         projects: {
-          connectOrCreate: projects.map(projectName => ({
+          connectOrCreate: projects.map(name => ({
             where: {
-              name: projectName // Using name as the unique identifier
-            },
+              name
+            } as Prisma.ProjectWhereUniqueInput,
             create: {
-              name: projectName
+              name
             }
           }))
         }
