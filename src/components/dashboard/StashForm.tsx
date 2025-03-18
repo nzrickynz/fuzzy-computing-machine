@@ -8,6 +8,7 @@ export function StashForm() {
   const router = useRouter();
   const [text, setText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const hasTagsOrProjects = useMemo(() => {
     const hasHashtag = /#[\w-]+/.test(text);
@@ -20,6 +21,8 @@ export function StashForm() {
     if (!text.trim() || !hasTagsOrProjects || isSubmitting) return;
 
     setIsSubmitting(true);
+    setError('');
+
     try {
       const response = await fetch('/api/stashes', {
         method: 'POST',
@@ -27,11 +30,20 @@ export function StashForm() {
         body: JSON.stringify({ text }),
       });
 
-      if (!response.ok) throw new Error('Failed to create stash');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to create stash');
+      }
+
+      const data = await response.json();
+      console.log('Stash created:', data);
+      
       setText('');
-      router.refresh(); // This will trigger a server-side revalidation
+      // Force a hard refresh to ensure the UI updates
+      window.location.reload();
     } catch (error) {
       console.error('Error creating stash:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create stash');
     } finally {
       setIsSubmitting(false);
     }
@@ -62,11 +74,16 @@ export function StashForm() {
           className="input-field h-32 resize-none"
         />
         <div className="flex justify-between items-center">
-          <p className="text-sm text-gray-400">
-            {!hasTagsOrProjects && text.trim()
-              ? 'Add at least one #tag or @project'
-              : 'Press Enter to submit, Shift + Enter for new line'}
-          </p>
+          <div className="space-y-1">
+            <p className="text-sm text-gray-400">
+              {!hasTagsOrProjects && text.trim()
+                ? 'Add at least one #tag or @project'
+                : 'Press Enter to submit, Shift + Enter for new line'}
+            </p>
+            {error && (
+              <p className="text-sm text-red-500">{error}</p>
+            )}
+          </div>
           <Button
             type="submit"
             isLoading={isSubmitting}
