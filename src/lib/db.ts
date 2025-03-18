@@ -1,24 +1,25 @@
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+declare global {
+  var prisma: PrismaClient | undefined;
+}
 
 const prismaClientSingleton = () => {
   return new PrismaClient({
-    log: [
-      { level: 'error', emit: 'stdout' },
-      { level: 'warn', emit: 'stdout' },
-    ],
-    datasources: {
-      db: {
-        url: process.env.POSTGRES_PRISMA_URL
-      }
-    }
+    log: ['error'],
   });
 };
 
-export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
+export const prisma = globalThis.prisma ?? prismaClientSingleton();
+
+if (process.env.NODE_ENV !== 'production') {
+  globalThis.prisma = prisma;
+}
+
+// Handle cleanup
+process.on('beforeExit', async () => {
+  await prisma.$disconnect();
+});
 
 // Add detailed query logging
 prisma.$on('query' as never, (e: Prisma.QueryEvent) => {
@@ -48,10 +49,6 @@ prisma.$use(async (params, next) => {
   }
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalForPrisma.prisma = prisma;
-}
-
 // Enhanced connection management
 export async function ensureConnection() {
   try {
@@ -64,11 +61,6 @@ export async function ensureConnection() {
     throw error;
   }
 }
-
-// Handle cleanup on exit
-process.on('beforeExit', async () => {
-  await prisma.$disconnect();
-});
 
 // Initialize connection
 ensureConnection(); 
