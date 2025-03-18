@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { getUser } from '@/lib/auth';
+import { Prisma } from '@prisma/client';
+
+interface AuthPayload {
+  userId: string;
+}
 
 export async function GET(request: NextRequest) {
   try {
-    const user = await getUser();
+    const user = await getUser() as AuthPayload | null;
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -13,7 +18,7 @@ export async function GET(request: NextRequest) {
     const tag = searchParams.get('tag');
     const project = searchParams.get('project');
 
-    const where = {
+    const where: Prisma.StashWhereInput = {
       userId: user.userId,
       ...(tag && {
         hashtags: {
@@ -48,7 +53,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUser();
+    const user = await getUser() as AuthPayload | null;
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
