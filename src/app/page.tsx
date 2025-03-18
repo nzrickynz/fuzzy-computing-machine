@@ -1,9 +1,39 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { getAuthStatus } from '@/lib/auth';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+async function getUser() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
+}
 
 export default async function HomePage() {
-  const auth = await getAuthStatus();
+  const user = await getUser();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white">
@@ -24,7 +54,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <div>
-            {auth ? (
+            {user ? (
               <Link
                 href="/dashboard"
                 className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700"
@@ -52,7 +82,7 @@ export default async function HomePage() {
       </nav>
 
       {/* Only show marketing content if not authenticated */}
-      {!auth && (
+      {!user && (
         <>
           {/* Hero Section */}
           <section className="px-4 py-20 mx-auto max-w-7xl sm:px-6 lg:px-8">
@@ -156,7 +186,7 @@ export default async function HomePage() {
       )}
 
       {/* Show redirect message if authenticated */}
-      {auth && (
+      {user && (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
           <h1 className="text-4xl font-bold mb-8">Welcome Back!</h1>
           <p className="text-xl mb-8">Ready to capture more ideas?</p>

@@ -1,17 +1,13 @@
 import React from 'react';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { verifyToken } from '@/lib/auth';
 import { prisma } from '@/lib/db';
 import { StashForm } from '@/components/dashboard/StashForm';
 import { StashList } from '@/components/dashboard/StashList';
 import { FilterList } from '@/components/dashboard/FilterList';
 import { ProjectList } from '@/components/dashboard/ProjectList';
 import { Prisma } from '@prisma/client';
-
-interface AuthPayload {
-  userId: string;
-}
 
 interface Hashtag {
   id: string;
@@ -33,19 +29,45 @@ interface Stash {
   projects: Project[];
 }
 
-async function getStashes(searchParams: { [key: string]: string | string[] | undefined }) {
-  const token = cookies().get('token')?.value;
-  if (!token) return null;
+async function getUser() {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          cookieStore.set({ name, value, ...options });
+        },
+        remove(name: string, options: any) {
+          cookieStore.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
 
-  const payload = await verifyToken(token) as AuthPayload | null;
-  if (!payload) return null;
+  const { data: { user }, error } = await supabase.auth.getUser();
+  
+  if (error || !user) {
+    return null;
+  }
+
+  return user;
+}
+
+async function getStashes(searchParams: { [key: string]: string | string[] | undefined }) {
+  const user = await getUser();
+  if (!user) return null;
 
   const tags = searchParams.tags ? (Array.isArray(searchParams.tags) ? searchParams.tags : [searchParams.tags]) : [];
   const projects = searchParams.projects ? (Array.isArray(searchParams.projects) ? searchParams.projects : [searchParams.projects]) : [];
 
   try {
     const where: Prisma.StashWhereInput = {
-      userId: payload.userId,
+      userId: user.id,
       ...(tags.length > 0 && {
         hashtags: {
           some: {
