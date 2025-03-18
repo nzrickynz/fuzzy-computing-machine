@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 export const prisma = new PrismaClient();
 
@@ -7,20 +7,10 @@ process.on('beforeExit', async () => {
   await prisma.$disconnect();
 });
 
-// Add detailed query logging
-prisma.$on('query' as never, (e: Prisma.QueryEvent) => {
-  console.log('Query: ' + e.query);
-  console.log('Duration: ' + e.duration + 'ms');
-  if (e.params) console.log('Params: ' + e.params);
-});
-
 // Add error handling middleware
 prisma.$use(async (params, next) => {
-  const before = Date.now();
   try {
     const result = await next(params);
-    const after = Date.now();
-    console.log(`[Prisma] ${params.model}.${params.action} took ${after - before}ms`);
     return result;
   } catch (error) {
     console.error(`[Prisma Error] ${params.model}.${params.action} failed:`, error);
