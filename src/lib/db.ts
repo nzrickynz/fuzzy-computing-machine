@@ -10,6 +10,11 @@ const prismaClientSingleton = () => {
       { level: 'error', emit: 'stdout' },
       { level: 'warn', emit: 'stdout' },
     ],
+    datasources: {
+      db: {
+        url: process.env.POSTGRES_PRISMA_URL
+      }
+    }
   });
 };
 
