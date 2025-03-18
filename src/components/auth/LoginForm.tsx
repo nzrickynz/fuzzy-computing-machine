@@ -25,12 +25,15 @@ export function LoginForm() {
       });
 
       if (error) {
+        console.error('Login error:', error);
         setError(error.message);
       } else if (data?.user) {
-        router.push('/dashboard');
-        router.refresh();
+        console.log('Login successful:', data.user);
+        // Force a hard refresh to ensure the session is properly set
+        window.location.href = '/dashboard';
       }
     } catch (error) {
+      console.error('Unexpected error:', error);
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
