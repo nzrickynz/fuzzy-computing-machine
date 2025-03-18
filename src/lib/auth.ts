@@ -3,7 +3,6 @@ import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
 import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
-import { PrismaAdapter } from '@auth/prisma-adapter';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { prisma } from './db';
 import { compare } from 'bcryptjs';
@@ -113,7 +112,6 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
-  adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },
   pages: {
     signIn: '/login',
@@ -131,29 +129,34 @@ export const {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: { email: creds.email },
-          select: {
-            id: true,
-            email: true,
-            password: true,
-          },
-        });
+        try {
+          const user = await prisma.user.findUnique({
+            where: { email: creds.email },
+            select: {
+              id: true,
+              email: true,
+              password: true,
+            },
+          });
 
-        if (!user) {
+          if (!user) {
+            return null;
+          }
+
+          const isValid = await compare(creds.password, user.password);
+          if (!isValid) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.email.split('@')[0],
+          };
+        } catch (error) {
+          console.error('Auth error:', error);
           return null;
         }
-
-        const isValid = await compare(creds.password, user.password);
-        if (!isValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.email.split('@')[0],
-        };
       },
     }),
   ],
