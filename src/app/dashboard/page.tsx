@@ -7,6 +7,11 @@ import { StashForm } from '@/components/dashboard/StashForm';
 import { StashList } from '@/components/dashboard/StashList';
 import { FilterList } from '@/components/dashboard/FilterList';
 import { ProjectList } from '@/components/dashboard/ProjectList';
+import { Prisma } from '@prisma/client';
+
+interface AuthPayload {
+  userId: string;
+}
 
 interface Hashtag {
   id: string;
@@ -32,35 +37,37 @@ async function getStashes(searchParams: { [key: string]: string | string[] | und
   const token = cookies().get('token')?.value;
   if (!token) return null;
 
-  const payload = await verifyToken(token);
+  const payload = await verifyToken(token) as AuthPayload | null;
   if (!payload) return null;
 
   const tags = searchParams.tags ? (Array.isArray(searchParams.tags) ? searchParams.tags : [searchParams.tags]) : [];
   const projects = searchParams.projects ? (Array.isArray(searchParams.projects) ? searchParams.projects : [searchParams.projects]) : [];
 
   try {
+    const where: Prisma.StashWhereInput = {
+      userId: payload.userId,
+      ...(tags.length > 0 && {
+        hashtags: {
+          some: {
+            name: {
+              in: tags,
+            },
+          },
+        },
+      }),
+      ...(projects.length > 0 && {
+        projects: {
+          some: {
+            name: {
+              in: projects,
+            },
+          },
+        },
+      }),
+    };
+
     const stashes = await prisma.stash.findMany({
-      where: {
-        userId: payload.userId,
-        ...(tags.length > 0 && {
-          hashtags: {
-            some: {
-              name: {
-                in: tags,
-              },
-            },
-          },
-        }),
-        ...(projects.length > 0 && {
-          projects: {
-            some: {
-              name: {
-                in: projects,
-              },
-            },
-          },
-        }),
-      },
+      where,
       include: {
         hashtags: true,
         projects: true,
