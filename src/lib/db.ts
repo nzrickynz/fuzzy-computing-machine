@@ -41,7 +41,7 @@ export async function ensureConnection() {
   } catch (error) {
     console.error('[Database] Connection failed:', error);
     // Log additional connection details (sanitized)
-    console.error('[Database] Connection URL format:', process.env.DATABASE_URL?.split('@')[0].split(':')[0]);
+    console.error('[Database] Connection URL format:', process.env.POSTGRES_PRISMA_URL?.split('@')[0].split(':')[0]);
     throw error;
   }
 }
