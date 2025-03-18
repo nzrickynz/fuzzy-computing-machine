@@ -1,30 +1,66 @@
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { getToken } from './lib/auth';
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-  // Public routes
-  if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
-    const token = await getToken(request);
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url));
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: any) {
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          });
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
     }
-    return NextResponse.next();
+  );
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // If user is not signed in and the current path is not /login or /signup,
+  // redirect the user to /login
+  if (!session && !request.nextUrl.pathname.startsWith('/login') && !request.nextUrl.pathname.startsWith('/signup')) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Protected routes
-  if (pathname.startsWith('/dashboard') || pathname.startsWith('/settings')) {
-    const token = await getToken(request);
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
+  // If user is signed in and the current path is /login or /signup,
+  // redirect the user to /dashboard
+  if (session && (request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/signup'))) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/settings/:path*', '/login', '/signup'],
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+  ],
 }; 
