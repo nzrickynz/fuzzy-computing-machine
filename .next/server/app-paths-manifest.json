@@ -1,1 +1,12 @@
-{}
+{
+  "/_not-found": "app/_not-found.js",
+  "/api/stashes/[id]/use/route": "app/api/stashes/[id]/use/route.js",
+  "/auth/auth-code-error/page": "app/auth/auth-code-error/page.js",
+  "/auth/callback/route": "app/auth/callback/route.js",
+  "/auth/verify-email/page": "app/auth/verify-email/page.js",
+  "/page": "app/page.js",
+  "/api/stashes/route": "app/api/stashes/route.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(auth)/signup/page": "app/(auth)/signup/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
+}
