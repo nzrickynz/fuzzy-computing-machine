@@ -6,11 +6,13 @@ import { ProjectList } from '@/components/dashboard/ProjectList';
 
 export const dynamic = 'force-dynamic';
 
+interface PageProps {
+  searchParams: { [key: string]: string | string[] | undefined };
+}
+
 export default async function DashboardPage({
   searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+}: PageProps) {
   const tag = searchParams.tag as string | undefined;
   const project = searchParams.project as string | undefined;
 
