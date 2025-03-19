@@ -6,13 +6,16 @@ import { ProjectList } from '@/components/dashboard/ProjectList';
 
 export const dynamic = 'force-dynamic';
 
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
 export default async function DashboardPage({
   searchParams,
-}: {
-  searchParams: Record<string, string | string[] | undefined>;
-}) {
-  const tag = searchParams.tag as string | undefined;
-  const project = searchParams.project as string | undefined;
+}: PageProps) {
+  const params = await searchParams;
+  const tag = params.tag as string | undefined;
+  const project = params.project as string | undefined;
 
   const stashes = await getStashes(tag, project);
 
