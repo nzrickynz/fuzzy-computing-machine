@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: { [key: string]: string | string[] | undefined };
+  searchParams: Record<string, string | string[] | undefined>;
 }) {
   const tag = searchParams.tag as string | undefined;
   const project = searchParams.project as string | undefined;
