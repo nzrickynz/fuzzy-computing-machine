@@ -1,83 +1,42 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/shared/Button';
+import { Input } from '@/components/shared/Input';
+import { useAuthForm } from '@/hooks/useAuthForm';
 import Link from 'next/link';
 
 export function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error('Login error:', error);
-        setError(error.message);
-      } else if (data?.user) {
-        console.log('Login successful:', data.user);
-        // Force a hard refresh to ensure the session is properly set
-        window.location.href = '/dashboard';
-      }
-    } catch (error) {
-      console.error('Unexpected error:', error);
-      setError('An error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { formData, error, loading, handleChange, handleSubmit } = useAuthForm({
+    mode: 'login',
+  });
 
   return (
     <div className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit} className="card p-6 space-y-6">
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-            Email
-          </label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="input-field"
-            placeholder="Enter your email"
-            required
-          />
-        </div>
+        <Input
+          type="email"
+          id="email"
+          name="email"
+          label="Email"
+          value={formData.email}
+          onChange={handleChange}
+          placeholder="Enter your email"
+          required
+          error={error}
+        />
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input-field"
-            placeholder="Enter your password"
-            required
-          />
-        </div>
+        <Input
+          type="password"
+          id="password"
+          name="password"
+          label="Password"
+          value={formData.password}
+          onChange={handleChange}
+          placeholder="Enter your password"
+          required
+        />
 
-        {error && (
-          <p className="text-sm text-red-500">{error}</p>
-        )}
-
-        <Button type="submit" isLoading={loading} className="btn-primary">
+        <Button type="submit" isLoading={loading} className="w-full">
           Sign In
         </Button>
 

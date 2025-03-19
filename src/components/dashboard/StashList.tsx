@@ -2,6 +2,9 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { formatDate } from '@/lib/utils';
+import { UseButton } from './UseButton';
+import { Badge } from '@/components/shared/Badge';
 
 interface StashWithRelations {
   id: string;
@@ -13,24 +16,11 @@ interface StashWithRelations {
   projects: { name: string }[];
 }
 
-interface Props {
+interface StashListProps {
   stashes: StashWithRelations[];
 }
 
-function formatDate(date: Date | string) {
-  const d = new Date(date);
-  return d.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
-}
-
-export function StashList({ stashes }: Props) {
+export function StashList({ stashes }: StashListProps) {
   const router = useRouter();
 
   const handleUse = async (stashId: string) => {
@@ -68,42 +58,24 @@ export function StashList({ stashes }: Props) {
             }`}>
               {stash.text}
             </p>
-            <button
-              onClick={() => handleUse(stash.id)}
-              disabled={!!stash.usedAt}
-              className={`shrink-0 px-3 py-1.5 rounded text-sm transition-colors ${
-                stash.usedAt
-                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
-                  : 'bg-green-900/50 text-green-300 hover:bg-green-800/50 hover:text-green-200'
-              }`}
-            >
-              {stash.usedAt ? 'Used' : 'Use'}
-            </button>
+            <UseButton stashId={stash.id} isUsed={!!stash.usedAt} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             {stash.hashtags.map((tag) => (
-              <span
+              <Badge
                 key={tag.name}
-                className={`px-2 py-1 text-sm rounded-lg ${
-                  stash.usedAt
-                    ? 'bg-gray-700/50 text-gray-400'
-                    : 'bg-blue-900/50 text-blue-300'
-                }`}
-              >
-                #{tag.name}
-              </span>
+                label={tag.name}
+                type="tag"
+                isUsed={!!stash.usedAt}
+              />
             ))}
             {stash.projects.map((project) => (
-              <span
+              <Badge
                 key={project.name}
-                className={`px-2 py-1 text-sm rounded-lg ${
-                  stash.usedAt
-                    ? 'bg-gray-700/50 text-gray-400'
-                    : 'bg-green-900/50 text-green-300'
-                }`}
-              >
-                @{project.name}
-              </span>
+                label={project.name}
+                type="project"
+                isUsed={!!stash.usedAt}
+              />
             ))}
           </div>
           <div className="mt-3 flex justify-between items-center text-sm text-gray-500">
