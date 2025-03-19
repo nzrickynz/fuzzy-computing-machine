@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
+import { NextRequest } from 'next/server';
 
 async function getUser() {
   const cookieStore = await cookies();
@@ -33,8 +34,8 @@ async function getUser() {
 }
 
 export async function POST(
-  request: Request,
-  { params }: { params: { id: string } }
+  request: NextRequest,
+  context: { params: { id: string } }
 ) {
   try {
     const user = await getUser();
@@ -47,7 +48,7 @@ export async function POST(
 
     // Find the stash and verify ownership
     const stash = await prisma.stash.findUnique({
-      where: { id: params.id },
+      where: { id: context.params.id },
     });
 
     if (!stash) {
@@ -66,7 +67,7 @@ export async function POST(
 
     // Update the stash with usedAt timestamp
     const updatedStash = await prisma.stash.update({
-      where: { id: params.id },
+      where: { id: context.params.id },
       data: {
         usedAt: new Date(),
       },
