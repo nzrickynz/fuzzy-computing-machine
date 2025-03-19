@@ -19,7 +19,11 @@ declare global {
   var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton();
+// In development, we want to reuse the connection
+// In production, we want to create a new connection for each request
+const prisma = process.env.NODE_ENV === 'production' 
+  ? prismaClientSingleton()
+  : (globalThis.prisma ?? prismaClientSingleton());
 
 if (process.env.NODE_ENV !== 'production') {
   globalThis.prisma = prisma;
