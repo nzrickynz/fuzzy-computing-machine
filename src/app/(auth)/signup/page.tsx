@@ -1,5 +1,4 @@
-import React from 'react';
-import { SignupForm } from '@/components/auth/SignupForm';
+import { AuthForm } from '@/components/auth/AuthForm';
 
 export default function SignupPage() {
   return (
@@ -8,7 +7,7 @@ export default function SignupPage() {
         <h1 className="text-3xl font-bold text-center mb-8 text-white">
           Create Account
         </h1>
-        <SignupForm />
+        <AuthForm mode="signup" />
       </div>
     </div>
   );

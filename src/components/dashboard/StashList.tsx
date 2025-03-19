@@ -1,44 +1,48 @@
 'use client';
 
-import React from 'react';
-import { useRouter } from 'next/navigation';
-import { formatDate } from '@/lib/utils';
-import { UseButton } from './UseButton';
+import { useState } from 'react';
 import { Badge } from '@/components/shared/Badge';
-
-interface StashWithRelations {
-  id: string;
-  text: string;
-  createdAt: Date;
-  usedAt: Date | null;
-  userId: string;
-  hashtags: { name: string }[];
-  projects: { name: string }[];
-}
+import { markStashAsUsed } from '@/lib/actions';
 
 interface StashListProps {
-  stashes: StashWithRelations[];
+  stashes: Array<{
+    id: string;
+    text: string;
+    createdAt: string;
+    usedAt: string | null;
+    hashtags: Array<{ name: string }>;
+    projects: Array<{ name: string }>;
+  }>;
 }
 
 export function StashList({ stashes }: StashListProps) {
-  const router = useRouter();
+  const [usedStashes, setUsedStashes] = useState<Set<string>>(
+    new Set(stashes.filter(s => s.usedAt).map(s => s.id))
+  );
 
-  const handleUse = async (stashId: string) => {
+  const handleUse = async (id: string) => {
     try {
-      const response = await fetch(`/api/stashes/${stashId}/use`, {
-        method: 'POST',
-      });
-      if (!response.ok) throw new Error('Failed to mark stash as used');
-      router.refresh();
+      await markStashAsUsed(id);
+      setUsedStashes(prev => new Set(Array.from(prev).concat(id)));
     } catch (error) {
       console.error('Error marking stash as used:', error);
     }
   };
 
-  if (!stashes.length) {
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  if (stashes.length === 0) {
     return (
-      <div className="card p-8 text-center text-gray-400">
-        No stashes yet. Drop your first one!
+      <div className="text-center text-gray-400 py-8">
+        No stashes found. Create your first stash!
       </div>
     );
   }
@@ -46,27 +50,31 @@ export function StashList({ stashes }: StashListProps) {
   return (
     <div className="space-y-4">
       {stashes.map((stash) => (
-        <div 
-          key={stash.id} 
-          className={`card p-6 transition-colors ${
-            stash.usedAt ? 'bg-gray-800/50' : ''
-          }`}
+        <div
+          key={stash.id}
+          className="bg-gray-800 rounded-lg p-4 space-y-3"
         >
-          <div className="flex justify-between items-start gap-4">
-            <p className={`text-gray-100 whitespace-pre-wrap ${
-              stash.usedAt ? 'text-gray-400' : ''
-            }`}>
-              {stash.text}
-            </p>
-            <UseButton stashId={stash.id} isUsed={!!stash.usedAt} />
+          <div className="flex justify-between items-start">
+            <p className="text-gray-200 whitespace-pre-wrap">{stash.text}</p>
+            <button
+              onClick={() => handleUse(stash.id)}
+              disabled={usedStashes.has(stash.id)}
+              className={`px-3 py-1 rounded text-sm ${
+                usedStashes.has(stash.id)
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {usedStashes.has(stash.id) ? 'Used' : 'Use'}
+            </button>
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {stash.hashtags.map((tag) => (
               <Badge
                 key={tag.name}
                 label={tag.name}
                 type="tag"
-                isUsed={!!stash.usedAt}
+                isUsed={usedStashes.has(stash.id)}
               />
             ))}
             {stash.projects.map((project) => (
@@ -74,16 +82,13 @@ export function StashList({ stashes }: StashListProps) {
                 key={project.name}
                 label={project.name}
                 type="project"
-                isUsed={!!stash.usedAt}
+                isUsed={usedStashes.has(stash.id)}
               />
             ))}
           </div>
-          <div className="mt-3 flex justify-between items-center text-sm text-gray-500">
-            <span>Created {formatDate(stash.createdAt)}</span>
-            {stash.usedAt && (
-              <span>Used {formatDate(stash.usedAt)}</span>
-            )}
-          </div>
+          <p className="text-sm text-gray-400">
+            Created {formatDate(stash.createdAt)}
+          </p>
         </div>
       ))}
     </div>
