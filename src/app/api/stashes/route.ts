@@ -102,6 +102,24 @@ export async function POST(request: NextRequest) {
 
     // Create stash with hashtags and projects
     console.log('Attempting to create stash in database...');
+    
+    // First, ensure the user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id }
+    });
+
+    if (!existingUser) {
+      // Create the user if they don't exist
+      await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email!,
+          password: '', // We don't need this since we're using Supabase Auth
+        }
+      });
+    }
+
+    // Then create the stash
     const stash = await prisma.stash.create({
       data: {
         text,
