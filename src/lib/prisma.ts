@@ -1,9 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 
-if (!process.env.POSTGRES_PRISMA_URL) {
-  throw new Error('POSTGRES_PRISMA_URL environment variable is not set');
-}
-
 const prismaClientSingleton = () => {
   return new PrismaClient({
     log: ['error', 'warn'],
