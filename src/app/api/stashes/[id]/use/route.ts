@@ -33,10 +33,7 @@ async function getUser() {
   return user;
 }
 
-export async function POST(
-  request: NextRequest,
-  context: { params: { id: string } }
-) {
+export async function POST(request: NextRequest) {
   try {
     const user = await getUser();
     if (!user) {
@@ -46,9 +43,12 @@ export async function POST(
       );
     }
 
+    // Get the stash ID from the URL
+    const id = request.url.split('/').slice(-2)[0];
+
     // Find the stash and verify ownership
     const stash = await prisma.stash.findUnique({
-      where: { id: context.params.id },
+      where: { id },
     });
 
     if (!stash) {
@@ -67,7 +67,7 @@ export async function POST(
 
     // Update the stash with usedAt timestamp
     const updatedStash = await prisma.stash.update({
-      where: { id: context.params.id },
+      where: { id },
       data: {
         usedAt: new Date(),
       },
