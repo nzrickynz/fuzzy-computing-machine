@@ -1,10 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 
-const prismaClientSingleton = () => {
-  if (!process.env.POSTGRES_PRISMA_URL) {
-    throw new Error('POSTGRES_PRISMA_URL environment variable is not set');
-  }
+if (!process.env.POSTGRES_PRISMA_URL) {
+  throw new Error('POSTGRES_PRISMA_URL environment variable is not set');
+}
 
+const prismaClientSingleton = () => {
   return new PrismaClient({
     log: ['error', 'warn'],
     datasources: {
@@ -15,18 +15,24 @@ const prismaClientSingleton = () => {
   });
 };
 
-declare global {
-  var prisma: undefined | ReturnType<typeof prismaClientSingleton>;
-}
+type PrismaClientSingleton = ReturnType<typeof prismaClientSingleton>;
 
-// In development, we want to reuse the connection
-// In production, we want to create a new connection for each request
-const prisma = process.env.NODE_ENV === 'production' 
-  ? prismaClientSingleton()
-  : (globalThis.prisma ?? prismaClientSingleton());
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClientSingleton | undefined;
+};
+
+export const prisma = globalForPrisma.prisma ?? prismaClientSingleton();
 
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma;
+  globalForPrisma.prisma = prisma;
 }
 
-export { prisma }; 
+// Cleanup function for serverless environments
+export async function cleanup() {
+  await prisma.$disconnect();
+}
+
+// Handle cleanup on process termination
+process.on('beforeExit', cleanup);
+process.on('SIGINT', cleanup);
+process.on('SIGTERM', cleanup); 
