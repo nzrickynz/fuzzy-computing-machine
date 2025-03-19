@@ -1,10 +1,18 @@
-# BrainRepo
+# Stashio
 
-Your digital brain for capturing thoughts, ideas, and tasks instantly.
+Your personal code stash for capturing and organizing code snippets, ideas, and tasks.
 
 ## About
 
-BrainRepo helps you capture and organize your thoughts efficiently, ensuring no brilliant idea ever gets lost.
+Stashio helps you capture and organize your code snippets efficiently, with support for hashtags and project organization.
+
+## Tech Stack
+
+- Next.js 14 (App Router)
+- Supabase (Auth & Database)
+- Prisma (ORM)
+- TypeScript
+- Tailwind CSS
 
 ## Development Setup
 
@@ -19,63 +27,53 @@ cd fuzzy-computing-machine
 npm install
 ```
 
-3. Copy environment variables
+3. Set up environment variables
 ```bash
 cp .env.example .env.local
 ```
 
-4. Update environment variables in `.env.local` with your values
+4. Update `.env.local` with your values:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+POSTGRES_PRISMA_URL=your_supabase_connection_string
+POSTGRES_URL_NON_POOLING=your_supabase_direct_connection
+```
 
-5. Run the development server
+5. Generate Prisma Client
+```bash
+npx prisma generate
+```
+
+6. Push database schema
+```bash
+npx prisma db push
+```
+
+7. Run the development server
 ```bash
 npm run dev
 ```
 
 ## Deployment
 
-### Staging Environment (staging.brainrepo.io)
+The application is automatically deployed to Vercel when changes are pushed to the main branch.
 
-The staging environment is automatically deployed when changes are pushed to the `staging` branch.
-
-1. Create and switch to staging branch
-```bash
-git checkout -b staging
-```
-
-2. Push changes to staging
-```bash
-git push origin staging
-```
-
-3. Vercel will automatically deploy to staging.brainrepo.io
-
-### Production Environment (brainrepo.io)
-
-Production is automatically deployed when changes are merged into the `main` branch.
-
-1. Create a pull request from `staging` to `main`
-2. Review changes
-3. Merge pull request
-4. Vercel will automatically deploy to brainrepo.io
-
-## Environment Variables
+### Environment Variables (Vercel)
 
 Required environment variables:
 
-- `DATABASE_URL`: PostgreSQL connection string
-- `NEXTAUTH_URL`: Full URL of the application
-- `NEXTAUTH_SECRET`: Random string for session encryption
+- `NEXT_PUBLIC_SUPABASE_URL`: Supabase project URL
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase anonymous key
+- `POSTGRES_PRISMA_URL`: PostgreSQL connection string (pooled)
+- `POSTGRES_URL_NON_POOLING`: PostgreSQL direct connection string
 
-Optional environment variables:
+## Features
 
-- `SMTP_HOST`: SMTP server host for email
-- `SMTP_PORT`: SMTP server port
-- `SMTP_USER`: SMTP username
-- `SMTP_PASSWORD`: SMTP password
-- `SMTP_FROM`: From email address
-
-## Branching Strategy
-
-- `main`: Production branch, deploys to brainrepo.io
-- `staging`: Staging branch, deploys to staging.brainrepo.io
-- Feature branches: Create from `staging`, merge back to `staging`
+- Authentication with Supabase
+- Create and organize code snippets
+- Tag snippets with hashtags
+- Organize snippets by projects
+- Track usage of snippets
+- Real-time updates
+- Responsive design
