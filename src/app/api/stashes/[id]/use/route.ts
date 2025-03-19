@@ -35,7 +35,7 @@ async function getUser() {
 
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const user = await getUser();
@@ -48,7 +48,7 @@ export async function POST(
 
     // Find the stash and verify ownership
     const stash = await prisma.stash.findUnique({
-      where: { id: context.params.id },
+      where: { id: params.id },
     });
 
     if (!stash) {
@@ -67,7 +67,7 @@ export async function POST(
 
     // Update the stash with usedAt timestamp
     const updatedStash = await prisma.stash.update({
-      where: { id: context.params.id },
+      where: { id: params.id },
       data: {
         usedAt: new Date(),
       },
