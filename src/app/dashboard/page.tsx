@@ -2,7 +2,7 @@ import React from 'react';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 import { StashForm } from '@/components/dashboard/StashForm';
 import { StashList } from '@/components/dashboard/StashList';
 import { FilterList } from '@/components/dashboard/FilterList';
