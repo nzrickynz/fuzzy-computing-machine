@@ -4,13 +4,15 @@ import { StashList } from '@/components/dashboard/StashList';
 
 export const dynamic = 'force-dynamic';
 
-interface Props {
-  searchParams: Record<string, string | string[] | undefined>;
-}
+type Props = {
+  params: { slug: string };
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
 
-export default function DashboardPage({ searchParams }: Props) {
-  const tag = typeof searchParams.tag === 'string' ? searchParams.tag : undefined;
-  const project = typeof searchParams.project === 'string' ? searchParams.project : undefined;
+export default async function DashboardPage({ searchParams }: Props) {
+  const params = await searchParams;
+  const tag = typeof params.tag === 'string' ? params.tag : undefined;
+  const project = typeof params.project === 'string' ? params.project : undefined;
 
   return (
     <div className="container mx-auto px-4 py-8">
