@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTransition } from 'react';
 
 interface FilterListProps {
   hashtags: string[];
@@ -10,6 +11,7 @@ interface FilterListProps {
 export function FilterList({ hashtags, selectedTags }: FilterListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const handleTagClick = (tag: string) => {
     const currentTags = selectedTags.includes(tag)
@@ -18,11 +20,14 @@ export function FilterList({ hashtags, selectedTags }: FilterListProps) {
 
     const params = new URLSearchParams(searchParams.toString());
     if (currentTags.length > 0) {
-      params.set('tags', currentTags.join(','));
+      params.set('tag', currentTags[0]); // Only allow one tag at a time for now
     } else {
-      params.delete('tags');
+      params.delete('tag');
     }
-    router.push(`/dashboard?${params.toString()}`);
+
+    startTransition(() => {
+      router.push(`/dashboard?${params.toString()}`);
+    });
   };
 
   if (hashtags.length === 0) return null;
@@ -35,11 +40,12 @@ export function FilterList({ hashtags, selectedTags }: FilterListProps) {
           <button
             key={tag}
             onClick={() => handleTagClick(tag)}
+            disabled={isPending}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
               selectedTags.includes(tag)
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+            } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             #{tag}
           </button>

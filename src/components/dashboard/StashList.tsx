@@ -13,9 +13,10 @@ interface StashListProps {
     hashtags: Array<{ name: string }>;
     projects: Array<{ name: string }>;
   }>;
+  isLoading?: boolean;
 }
 
-export function StashList({ stashes }: StashListProps) {
+export function StashList({ stashes, isLoading = false }: StashListProps) {
   const [usedStashes, setUsedStashes] = useState<Set<string>>(
     new Set(stashes.filter(s => s.usedAt).map(s => s.id))
   );
@@ -38,6 +39,25 @@ export function StashList({ stashes }: StashListProps) {
       minute: '2-digit',
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="bg-gray-800 rounded-lg p-4 space-y-3 animate-pulse"
+          >
+            <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+            <div className="flex gap-2">
+              <div className="h-6 bg-gray-700 rounded w-16"></div>
+            </div>
+            <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   if (stashes.length === 0) {
     return (

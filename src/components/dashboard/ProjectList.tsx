@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTransition } from 'react';
 
 interface Props {
   projects: string[];
@@ -11,21 +12,20 @@ interface Props {
 export function ProjectList({ projects, selectedProjects }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
   const toggleProject = (project: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    const currentProjects = params.getAll('projects');
     
-    if (currentProjects.includes(project)) {
-      // Remove project
-      params.delete('projects');
-      currentProjects.filter(p => p !== project).forEach(p => params.append('projects', p));
+    if (selectedProjects.includes(project)) {
+      params.delete('project');
     } else {
-      // Add project
-      params.append('projects', project);
+      params.set('project', project);
     }
     
-    router.push(`?${params.toString()}`);
+    startTransition(() => {
+      router.push(`/dashboard?${params.toString()}`);
+    });
   };
 
   if (!projects.length) {
@@ -45,11 +45,12 @@ export function ProjectList({ projects, selectedProjects }: Props) {
           <button
             key={project}
             onClick={() => toggleProject(project)}
+            disabled={isPending}
             className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
               selectedProjects.includes(project)
                 ? 'bg-green-500 text-white'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+            } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
             @{project}
           </button>

@@ -3,12 +3,21 @@ import { StashForm } from '@/components/dashboard/StashForm';
 import { StashList } from '@/components/dashboard/StashList';
 import { FilterList } from '@/components/dashboard/FilterList';
 import { ProjectList } from '@/components/dashboard/ProjectList';
+import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
+
+function StashListWrapper({ stashes, isLoading }: { stashes: any[], isLoading: boolean }) {
+  return (
+    <div className="mt-8">
+      <StashList stashes={stashes} isLoading={isLoading} />
+    </div>
+  );
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -39,9 +48,9 @@ export default async function DashboardPage({
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-2">
           <StashForm />
-          <div className="mt-8">
-            <StashList stashes={formattedStashes} />
-          </div>
+          <Suspense fallback={<StashListWrapper stashes={[]} isLoading={true} />}>
+            <StashListWrapper stashes={formattedStashes} isLoading={false} />
+          </Suspense>
         </div>
         <div className="lg:col-span-2">
           <div className="space-y-8">
