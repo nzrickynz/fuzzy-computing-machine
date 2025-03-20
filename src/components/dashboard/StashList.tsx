@@ -3,48 +3,113 @@
 import { useState } from 'react';
 import { Badge } from '@/components/shared/Badge';
 import { markStashAsUsed } from '@/lib/actions';
-import { useStashes } from '@/hooks/useStashes';
-import { StashCard } from './StashCard';
 
 interface StashListProps {
-  selectedTag?: string;
-  selectedProject?: string;
+  stashes: Array<{
+    id: string;
+    text: string;
+    createdAt: string;
+    usedAt: string | null;
+    hashtags: Array<{ name: string }>;
+    projects: Array<{ name: string }>;
+  }>;
+  isLoading?: boolean;
 }
 
-export function StashList({ selectedTag, selectedProject }: StashListProps) {
-  const { stashes, isLoading, isError } = useStashes({
-    tag: selectedTag,
-    project: selectedProject,
-  });
+export function StashList({ stashes, isLoading = false }: StashListProps) {
+  const [usedStashes, setUsedStashes] = useState<Set<string>>(
+    new Set(stashes.filter(s => s.usedAt).map(s => s.id))
+  );
+
+  const handleUse = async (id: string) => {
+    try {
+      await markStashAsUsed(id);
+      setUsedStashes(prev => new Set(Array.from(prev).concat(id)));
+    } catch (error) {
+      console.error('Error marking stash as used:', error);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
-  }
-
-  if (isError) {
-    return (
-      <div className="text-center text-red-500 py-4">
-        Failed to load stashes. Please try again later.
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="bg-gray-800 rounded-lg p-4 space-y-3 animate-pulse"
+          >
+            <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+            <div className="flex gap-2">
+              <div className="h-6 bg-gray-700 rounded w-16"></div>
+            </div>
+            <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+          </div>
+        ))}
       </div>
     );
   }
 
   if (stashes.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-4">
+      <div className="text-center text-gray-400 py-8">
         No stashes found. Create your first stash!
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="space-y-4">
       {stashes.map((stash) => (
-        <StashCard key={stash.id} stash={stash} />
+        <div
+          key={stash.id}
+          className="bg-gray-800 rounded-lg p-4 space-y-3"
+        >
+          <div className="flex justify-between items-start">
+            <p className="text-gray-200 whitespace-pre-wrap">{stash.text}</p>
+            <button
+              onClick={() => handleUse(stash.id)}
+              disabled={usedStashes.has(stash.id)}
+              className={`px-3 py-1 rounded text-sm ${
+                usedStashes.has(stash.id)
+                  ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+            >
+              {usedStashes.has(stash.id) ? 'Used' : 'Use'}
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {stash.hashtags.map((tag) => (
+              <Badge
+                key={tag.name}
+                label={tag.name}
+                type="tag"
+                isUsed={usedStashes.has(stash.id)}
+              />
+            ))}
+            {stash.projects.map((project) => (
+              <Badge
+                key={project.name}
+                label={project.name}
+                type="project"
+                isUsed={usedStashes.has(stash.id)}
+              />
+            ))}
+          </div>
+          <p className="text-sm text-gray-400">
+            Created {formatDate(stash.createdAt)}
+          </p>
+        </div>
       ))}
     </div>
   );

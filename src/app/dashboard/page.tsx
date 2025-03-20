@@ -1,28 +1,61 @@
+import { getStashes } from '@/lib/actions';
+import { StashForm } from '@/components/dashboard/StashForm';
+import { StashList } from '@/components/dashboard/StashList';
 import { FilterList } from '@/components/dashboard/FilterList';
 import { ProjectList } from '@/components/dashboard/ProjectList';
-import { StashList } from '@/components/dashboard/StashList';
+import { Suspense } from 'react';
 
 export const dynamic = 'force-dynamic';
 
-type Props = {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+type PageProps = {
+  searchParams: Record<string, string | string[] | undefined>;
 };
 
-export default async function DashboardPage({ searchParams }: Props) {
-  const params = await searchParams;
-  const tag = typeof params.tag === 'string' ? params.tag : undefined;
-  const project = typeof params.project === 'string' ? params.project : undefined;
+function StashListWrapper({ stashes, isLoading }: { stashes: any[], isLoading: boolean }) {
+  return (
+    <div className="mt-8">
+      <StashList stashes={stashes} isLoading={isLoading} />
+    </div>
+  );
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: PageProps) {
+  const tag = searchParams.tag as string | undefined;
+  const project = searchParams.project as string | undefined;
+
+  const stashes = await getStashes(tag, project);
+
+  // Extract unique hashtags and projects
+  const hashtags = Array.from(
+    new Set(stashes.flatMap(stash => stash.hashtags.map(tag => tag.name)))
+  );
+  const projects = Array.from(
+    new Set(stashes.flatMap(stash => stash.projects.map(project => project.name)))
+  );
+
+  // Convert dates to strings for the StashList component
+  const formattedStashes = stashes.map(stash => ({
+    ...stash,
+    createdAt: stash.createdAt.toISOString(),
+    usedAt: stash.usedAt?.toISOString() ?? null,
+  }));
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid gap-8 md:grid-cols-[250px_1fr]">
-        <div className="space-y-8">
-          <FilterList selectedTag={tag} />
-          <ProjectList selectedProject={project} />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="lg:col-span-2">
+          <StashForm />
+          <Suspense fallback={<StashListWrapper stashes={[]} isLoading={true} />}>
+            <StashListWrapper stashes={formattedStashes} isLoading={false} />
+          </Suspense>
         </div>
-        <div>
-          <StashList selectedTag={tag} selectedProject={project} />
+        <div className="lg:col-span-2">
+          <div className="space-y-8">
+            <FilterList hashtags={hashtags} selectedTags={tag ? [tag] : []} />
+            <ProjectList projects={projects} selectedProjects={project ? [project] : []} />
+          </div>
         </div>
       </div>
     </div>

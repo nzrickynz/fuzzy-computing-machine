@@ -1,46 +1,54 @@
 'use client';
 
-import Link from 'next/link';
-import { useStashes } from '@/hooks/useStashes';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useTransition } from 'react';
 
 interface FilterListProps {
-  selectedTag?: string;
+  hashtags: string[];
+  selectedTags: string[];
 }
 
-export function FilterList({ selectedTag }: FilterListProps) {
-  const { stashes } = useStashes();
+export function FilterList({ hashtags, selectedTags }: FilterListProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
-  // Extract unique hashtags
-  const hashtags = Array.from(
-    new Set(stashes.flatMap(stash => stash.hashtags.map(tag => tag.name)))
-  );
+  const handleTagClick = (tag: string) => {
+    const currentTags = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+
+    const params = new URLSearchParams(searchParams.toString());
+    if (currentTags.length > 0) {
+      params.set('tag', currentTags[0]); // Only allow one tag at a time for now
+    } else {
+      params.delete('tag');
+    }
+
+    startTransition(() => {
+      router.push(`/dashboard?${params.toString()}`);
+    });
+  };
+
+  if (hashtags.length === 0) return null;
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4">
+    <div className="card p-6">
       <h2 className="text-lg font-semibold mb-4">Tags</h2>
       <div className="flex flex-wrap gap-2">
-        <Link
-          href="/dashboard"
-          className={`px-3 py-1 rounded text-sm ${
-            !selectedTag
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          All
-        </Link>
-        {hashtags.map((tag) => (
-          <Link
+        {hashtags.map(tag => (
+          <button
             key={tag}
-            href={`/dashboard?tag=${encodeURIComponent(tag)}`}
-            className={`px-3 py-1 rounded text-sm ${
-              selectedTag === tag
+            onClick={() => handleTagClick(tag)}
+            disabled={isPending}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              selectedTags.includes(tag)
                 ? 'bg-blue-500 text-white'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+            } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {tag}
-          </Link>
+            #{tag}
+          </button>
         ))}
       </div>
     </div>

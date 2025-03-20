@@ -1,48 +1,58 @@
 'use client';
 
-import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
-import { useStashes } from '@/hooks/useStashes';
+import { useTransition } from 'react';
 
-interface ProjectListProps {
-  selectedProject?: string;
+interface Props {
+  projects: string[];
+  selectedProjects: string[];
 }
 
-export function ProjectList({ selectedProject }: ProjectListProps) {
-  const { stashes } = useStashes();
+export function ProjectList({ projects, selectedProjects }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isPending, startTransition] = useTransition();
 
-  // Extract unique projects
-  const projects = Array.from(
-    new Set(stashes.flatMap(stash => stash.projects.map(project => project.name)))
-  );
+  const toggleProject = (project: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    
+    if (selectedProjects.includes(project)) {
+      params.delete('project');
+    } else {
+      params.set('project', project);
+    }
+    
+    startTransition(() => {
+      router.push(`/dashboard?${params.toString()}`);
+    });
+  };
+
+  if (!projects.length) {
+    return (
+      <div className="card p-6">
+        <h2 className="font-semibold text-gray-100 mb-2">Projects</h2>
+        <p className="text-gray-400 text-sm">No projects yet</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4">
-      <h2 className="text-lg font-semibold mb-4">Projects</h2>
+    <div className="card p-6">
+      <h2 className="font-semibold text-gray-100 mb-4">Projects</h2>
       <div className="flex flex-wrap gap-2">
-        <Link
-          href="/dashboard"
-          className={`px-3 py-1 rounded text-sm ${
-            !selectedProject
-              ? 'bg-blue-500 text-white'
-              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-          }`}
-        >
-          All
-        </Link>
         {projects.map((project) => (
-          <Link
+          <button
             key={project}
-            href={`/dashboard?project=${encodeURIComponent(project)}`}
-            className={`px-3 py-1 rounded text-sm ${
-              selectedProject === project
-                ? 'bg-blue-500 text-white'
+            onClick={() => toggleProject(project)}
+            disabled={isPending}
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              selectedProjects.includes(project)
+                ? 'bg-green-500 text-white'
                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+            } ${isPending ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {project}
-          </Link>
+            @{project}
+          </button>
         ))}
       </div>
     </div>
