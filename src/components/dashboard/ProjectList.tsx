@@ -40,15 +40,15 @@ export function ProjectList({ projects, selectedProjects }: Props) {
   return (
     <div className="card p-6">
       <h2 className="font-semibold text-gray-100 mb-4">Projects</h2>
-      <div className="space-y-2">
+      <div className="flex flex-wrap gap-2">
         {projects.map((project) => (
           <button
             key={project}
             onClick={() => toggleProject(project)}
-            className={`block w-full text-left px-3 py-2 rounded-lg transition-colors ${
+            className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
               selectedProjects.includes(project)
-                ? 'bg-green-900/50 text-green-300'
-                : 'text-gray-300 hover:bg-gray-700'
+                ? 'bg-green-500 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             @{project}

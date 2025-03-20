@@ -29,7 +29,7 @@ export function FilterList({ hashtags, selectedTags }: FilterListProps) {
 
   return (
     <div className="card p-6">
-      <h2 className="text-lg font-semibold mb-4">Filter by Tags</h2>
+      <h2 className="text-lg font-semibold mb-4">Tags</h2>
       <div className="flex flex-wrap gap-2">
         {hashtags.map(tag => (
           <button
