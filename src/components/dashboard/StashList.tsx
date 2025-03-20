@@ -3,22 +3,44 @@
 import { useState } from 'react';
 import { Badge } from '@/components/shared/Badge';
 import { markStashAsUsed } from '@/lib/actions';
+import useSWR from 'swr';
+
+interface Stash {
+  id: string;
+  text: string;
+  createdAt: string;
+  usedAt: string | null;
+  hashtags: Array<{ name: string }>;
+  projects: Array<{ name: string }>;
+}
 
 interface StashListProps {
-  stashes: Array<{
-    id: string;
-    text: string;
-    createdAt: string;
-    usedAt: string | null;
-    hashtags: Array<{ name: string }>;
-    projects: Array<{ name: string }>;
-  }>;
+  stashes: Stash[];
   isLoading?: boolean;
 }
 
-export function StashList({ stashes, isLoading = false }: StashListProps) {
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch stashes');
+  }
+  return response.json();
+};
+
+export function StashList({ stashes: initialStashes, isLoading: initialLoading = false }: StashListProps) {
   const [usedStashes, setUsedStashes] = useState<Set<string>>(
-    new Set(stashes.filter(s => s.usedAt).map(s => s.id))
+    new Set(initialStashes.filter(s => s.usedAt).map(s => s.id))
+  );
+
+  // Use SWR for caching and revalidation
+  const { data: stashes = initialStashes, isLoading = initialLoading } = useSWR<Stash[]>(
+    '/api/stashes',
+    fetcher,
+    {
+      fallbackData: initialStashes,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+    }
   );
 
   const handleUse = async (id: string) => {
@@ -69,7 +91,7 @@ export function StashList({ stashes, isLoading = false }: StashListProps) {
 
   return (
     <div className="space-y-4">
-      {stashes.map((stash) => (
+      {stashes.map((stash: Stash) => (
         <div
           key={stash.id}
           className="bg-gray-800 rounded-lg p-4 space-y-3"
@@ -89,7 +111,7 @@ export function StashList({ stashes, isLoading = false }: StashListProps) {
             </button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {stash.hashtags.map((tag) => (
+            {stash.hashtags.map((tag: { name: string }) => (
               <Badge
                 key={tag.name}
                 label={tag.name}
@@ -97,7 +119,7 @@ export function StashList({ stashes, isLoading = false }: StashListProps) {
                 isUsed={usedStashes.has(stash.id)}
               />
             ))}
-            {stash.projects.map((project) => (
+            {stash.projects.map((project: { name: string }) => (
               <Badge
                 key={project.name}
                 label={project.name}
