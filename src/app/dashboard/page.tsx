@@ -1,61 +1,26 @@
-import { getStashes } from '@/lib/actions';
-import { StashForm } from '@/components/dashboard/StashForm';
-import { StashList } from '@/components/dashboard/StashList';
 import { FilterList } from '@/components/dashboard/FilterList';
 import { ProjectList } from '@/components/dashboard/ProjectList';
-import { Suspense } from 'react';
+import { StashList } from '@/components/dashboard/StashList';
 
 export const dynamic = 'force-dynamic';
 
-type PageProps = {
+interface Props {
   searchParams: Record<string, string | string[] | undefined>;
-};
-
-function StashListWrapper({ stashes, isLoading }: { stashes: any[], isLoading: boolean }) {
-  return (
-    <div className="mt-8">
-      <StashList stashes={stashes} isLoading={isLoading} />
-    </div>
-  );
 }
 
-export default async function DashboardPage({
-  searchParams,
-}: PageProps) {
-  const tag = searchParams.tag as string | undefined;
-  const project = searchParams.project as string | undefined;
-
-  const stashes = await getStashes(tag, project);
-
-  // Extract unique hashtags and projects
-  const hashtags = Array.from(
-    new Set(stashes.flatMap(stash => stash.hashtags.map(tag => tag.name)))
-  );
-  const projects = Array.from(
-    new Set(stashes.flatMap(stash => stash.projects.map(project => project.name)))
-  );
-
-  // Convert dates to strings for the StashList component
-  const formattedStashes = stashes.map(stash => ({
-    ...stash,
-    createdAt: stash.createdAt.toISOString(),
-    usedAt: stash.usedAt?.toISOString() ?? null,
-  }));
+export default function DashboardPage({ searchParams }: Props) {
+  const tag = typeof searchParams.tag === 'string' ? searchParams.tag : undefined;
+  const project = typeof searchParams.project === 'string' ? searchParams.project : undefined;
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-2">
-          <StashForm />
-          <Suspense fallback={<StashListWrapper stashes={[]} isLoading={true} />}>
-            <StashListWrapper stashes={formattedStashes} isLoading={false} />
-          </Suspense>
+      <div className="grid gap-8 md:grid-cols-[250px_1fr]">
+        <div className="space-y-8">
+          <FilterList selectedTag={tag} />
+          <ProjectList selectedProject={project} />
         </div>
-        <div className="lg:col-span-2">
-          <div className="space-y-8">
-            <FilterList hashtags={hashtags} selectedTags={tag ? [tag] : []} />
-            <ProjectList projects={projects} selectedProjects={project ? [project] : []} />
-          </div>
+        <div>
+          <StashList selectedTag={tag} selectedProject={project} />
         </div>
       </div>
     </div>
