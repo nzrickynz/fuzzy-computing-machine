@@ -35,6 +35,9 @@ export async function GET(request: Request) {
     const tag = searchParams.get('tag');
     const project = searchParams.get('project');
 
+    // Ensure we have a valid connection
+    await prisma.$connect();
+
     const stashes = await prisma.stash.findMany({
       where: {
         userId: user.id,
@@ -64,9 +67,20 @@ export async function GET(request: Request) {
       },
     });
 
+    // Clean up the connection
+    await prisma.$disconnect();
+
     return NextResponse.json(stashes);
   } catch (error) {
     console.error('Error fetching stashes:', error);
+    
+    // Ensure we clean up the connection even if there's an error
+    try {
+      await prisma.$disconnect();
+    } catch (disconnectError) {
+      console.error('Error disconnecting from database:', disconnectError);
+    }
+
     return NextResponse.json(
       { error: 'Failed to fetch stashes' },
       { status: 500 }
