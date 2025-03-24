@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { Badge } from '@/components/shared/Badge';
 import { markStashAsUsed } from '@/lib/actions';
-import useSWR from 'swr';
+import { useStashes } from '@/hooks/useStashes';
+import { useSearchParams } from 'next/navigation';
 
 interface Stash {
   id: string;
@@ -19,29 +20,20 @@ interface StashListProps {
   isLoading?: boolean;
 }
 
-const fetcher = async (url: string) => {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch stashes');
-  }
-  return response.json();
-};
-
 export function StashList({ stashes: initialStashes, isLoading: initialLoading = false }: StashListProps) {
+  const searchParams = useSearchParams();
+  const tag = searchParams.get('tag') ?? undefined;
+  const project = searchParams.get('project') ?? undefined;
+
   const [usedStashes, setUsedStashes] = useState<Set<string>>(
     new Set(initialStashes.filter(s => s.usedAt).map(s => s.id))
   );
 
-  // Use SWR for caching and revalidation
-  const { data: stashes = initialStashes, isLoading = initialLoading } = useSWR<Stash[]>(
-    '/api/stashes',
-    fetcher,
-    {
-      fallbackData: initialStashes,
-      revalidateOnFocus: false,
-      revalidateOnReconnect: false,
-    }
-  );
+  const { stashes, isLoading, isError } = useStashes({
+    tag,
+    project,
+    initialData: initialStashes,
+  });
 
   const handleUse = async (id: string) => {
     try {
@@ -77,6 +69,14 @@ export function StashList({ stashes: initialStashes, isLoading: initialLoading =
             <div className="h-4 bg-gray-700 rounded w-1/2"></div>
           </div>
         ))}
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="text-center text-red-400 py-8">
+        Error loading stashes. Please try again later.
       </div>
     );
   }
