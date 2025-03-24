@@ -9,7 +9,7 @@ const prisma = globalThis.prisma ?? new PrismaClient({
   // Use a simpler configuration that works with Vercel
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: process.env.DATABASE_URL?.replace('postgres://', 'postgresql://'),
     },
   },
 });
