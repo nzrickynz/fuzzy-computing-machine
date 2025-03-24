@@ -35,17 +35,6 @@ export async function GET(request: Request) {
     const tag = searchParams.get('tag');
     const project = searchParams.get('project');
 
-    // Ensure we have a valid connection
-    try {
-      await prisma.$connect();
-    } catch (connectionError) {
-      console.error('Failed to connect to database:', connectionError);
-      return NextResponse.json(
-        { error: 'Database connection failed. Please check your environment variables.' },
-        { status: 503 }
-      );
-    }
-
     const stashes = await prisma.stash.findMany({
       where: {
         userId: user.id,
@@ -75,28 +64,9 @@ export async function GET(request: Request) {
       },
     });
 
-    // Clean up the connection
-    await prisma.$disconnect();
-
     return NextResponse.json(stashes);
   } catch (error) {
     console.error('Error fetching stashes:', error);
-    
-    // Ensure we clean up the connection even if there's an error
-    try {
-      await prisma.$disconnect();
-    } catch (disconnectError) {
-      console.error('Error disconnecting from database:', disconnectError);
-    }
-
-    // Check if it's a database connection error
-    if (error instanceof Error && error.message.includes('Can\'t reach database server')) {
-      return NextResponse.json(
-        { error: 'Database connection failed. Please check your environment variables.' },
-        { status: 503 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Failed to fetch stashes' },
       { status: 500 }
