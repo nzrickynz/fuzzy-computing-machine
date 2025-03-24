@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 async function getUser() {
   const cookieStore = await cookies();
@@ -29,28 +30,45 @@ export async function getStashes(tag?: string, project?: string) {
     throw new Error('Unauthorized');
   }
 
-  const where: Prisma.StashWhereInput = {
-    userId: user.id,
-    ...(tag && {
-      hashtags: {
-        some: { name: tag }
-      }
-    }),
-    ...(project && {
-      projects: {
-        some: { name: project }
-      }
-    })
-  };
-
-  return prisma.stash.findMany({
-    where,
-    include: {
-      hashtags: true,
-      projects: true
-    },
-    orderBy: { createdAt: 'desc' }
-  });
+  const prisma = new PrismaClient();
+  
+  try {
+    const stashes = await prisma.stash.findMany({
+      where: {
+        userId: user.id,
+        AND: [
+          tag ? {
+            hashtags: {
+              some: {
+                name: tag,
+              },
+            },
+          } : {},
+          project ? {
+            projects: {
+              some: {
+                name: project,
+              },
+            },
+          } : {},
+        ],
+      },
+      include: {
+        hashtags: true,
+        projects: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    
+    return stashes;
+  } catch (error) {
+    console.error('Error fetching stashes:', error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 export async function createStash(text: string) {
