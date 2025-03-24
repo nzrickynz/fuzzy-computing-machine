@@ -8,7 +8,7 @@ const prisma = globalThis.prisma ?? new PrismaClient({
   log: ['error', 'warn'],
   datasources: {
     db: {
-      url: process.env.POSTGRES_PRISMA_URL,
+      url: process.env.POSTGRES_URL_NON_POOLING,
     },
   },
 });
