@@ -1,45 +1,31 @@
+import { ButtonHTMLAttributes } from 'react';
 import { twMerge } from 'tailwind-merge';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger';
-  children: React.ReactNode;
-  isLoading?: boolean;
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary';
 }
 
-export function Button({
+export function Button({ 
+  children, 
+  className, 
   variant = 'primary',
-  children,
-  className,
   disabled,
-  isLoading,
-  ...props
+  ...props 
 }: ButtonProps) {
-  const baseStyles = 'px-4 py-2 rounded-lg font-medium transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed';
-  
-  const variants = {
-    primary: 'bg-blue-500 text-white hover:bg-blue-600 active:bg-blue-700',
-    secondary: 'bg-gray-200 text-gray-800 hover:bg-gray-300 active:bg-gray-400',
-    danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700',
-  };
-
   return (
     <button
       className={twMerge(
-        baseStyles,
-        variants[variant],
-        isLoading && 'opacity-50 cursor-wait',
+        'px-4 py-2 rounded-lg font-medium transition-colors',
+        variant === 'primary' 
+          ? 'bg-blue-500 text-white hover:bg-blue-600 disabled:bg-blue-300'
+          : 'bg-gray-700 text-gray-300 hover:bg-gray-600 disabled:bg-gray-600',
+        'disabled:cursor-not-allowed',
         className
       )}
-      disabled={disabled || isLoading}
+      disabled={disabled}
       {...props}
     >
-      {isLoading ? (
-        <div className="flex items-center justify-center">
-          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </button>
   );
 } 
