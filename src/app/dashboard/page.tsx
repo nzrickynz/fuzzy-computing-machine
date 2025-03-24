@@ -8,7 +8,7 @@ import { Suspense } from 'react';
 export const dynamic = 'force-dynamic';
 
 type PageProps = {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 function StashListWrapper({ stashes, isLoading }: { stashes: any[], isLoading: boolean }) {
@@ -30,8 +30,9 @@ function StashFormWrapper() {
 export default async function DashboardPage({
   searchParams,
 }: PageProps) {
-  const tag = searchParams.tag as string | undefined;
-  const project = searchParams.project as string | undefined;
+  const params = await searchParams;
+  const tag = params.tag as string | undefined;
+  const project = params.project as string | undefined;
 
   const stashes = await getStashes(tag, project);
 
