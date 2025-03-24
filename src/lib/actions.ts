@@ -2,9 +2,8 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
 import { PrismaClient } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 
 async function getUser() {
   const cookieStore = await cookies();
@@ -81,47 +80,56 @@ export async function createStash(text: string) {
     throw new Error('Invalid input');
   }
 
-  // Extract hashtags and projects from text
-  const hashtags = Array.from(text.matchAll(/#[\w-]+/g)).map(match => match[0].slice(1));
-  const projects = Array.from(text.matchAll(/@[\w-]+/g)).map(match => match[0].slice(1));
+  const prisma = new PrismaClient();
 
-  // First, ensure the user exists
-  const existingUser = await prisma.user.findUnique({
-    where: { id: user.id }
-  });
+  try {
+    // Extract hashtags and projects from text
+    const hashtags = Array.from(text.matchAll(/#[\w-]+/g)).map(match => match[0].slice(1));
+    const projects = Array.from(text.matchAll(/@[\w-]+/g)).map(match => match[0].slice(1));
 
-  if (!existingUser) {
-    await prisma.user.create({
+    // First, ensure the user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { id: user.id }
+    });
+
+    if (!existingUser) {
+      await prisma.user.create({
+        data: {
+          id: user.id,
+          email: user.email!,
+        }
+      });
+    }
+
+    // Then create the stash
+    return await prisma.stash.create({
       data: {
-        id: user.id,
-        email: user.email!,
+        text,
+        userId: user.id,
+        hashtags: {
+          connectOrCreate: hashtags.map(name => ({
+            where: { name } as Prisma.HashtagWhereUniqueInput,
+            create: { name }
+          }))
+        },
+        projects: {
+          connectOrCreate: projects.map(name => ({
+            where: { name } as Prisma.ProjectWhereUniqueInput,
+            create: { name }
+          }))
+        }
+      },
+      include: {
+        hashtags: true,
+        projects: true
       }
     });
+  } catch (error) {
+    console.error('Error creating stash:', error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
   }
-
-  // Then create the stash
-  return prisma.stash.create({
-    data: {
-      text,
-      userId: user.id,
-      hashtags: {
-        connectOrCreate: hashtags.map(name => ({
-          where: { name } as Prisma.HashtagWhereUniqueInput,
-          create: { name }
-        }))
-      },
-      projects: {
-        connectOrCreate: projects.map(name => ({
-          where: { name } as Prisma.ProjectWhereUniqueInput,
-          create: { name }
-        }))
-      }
-    },
-    include: {
-      hashtags: true,
-      projects: true
-    }
-  });
 }
 
 export async function markStashAsUsed(id: string) {
@@ -130,24 +138,33 @@ export async function markStashAsUsed(id: string) {
     throw new Error('Unauthorized');
   }
 
-  // Find the stash and verify ownership
-  const stash = await prisma.stash.findUnique({
-    where: { id },
-  });
+  const prisma = new PrismaClient();
 
-  if (!stash) {
-    throw new Error('Stash not found');
+  try {
+    // Find the stash and verify ownership
+    const stash = await prisma.stash.findUnique({
+      where: { id },
+    });
+
+    if (!stash) {
+      throw new Error('Stash not found');
+    }
+
+    if (stash.userId !== user.id) {
+      throw new Error('Unauthorized');
+    }
+
+    // Update the stash with usedAt timestamp
+    return await prisma.stash.update({
+      where: { id },
+      data: {
+        usedAt: new Date(),
+      },
+    });
+  } catch (error) {
+    console.error('Error marking stash as used:', error);
+    throw error;
+  } finally {
+    await prisma.$disconnect();
   }
-
-  if (stash.userId !== user.id) {
-    throw new Error('Unauthorized');
-  }
-
-  // Update the stash with usedAt timestamp
-  return prisma.stash.update({
-    where: { id },
-    data: {
-      usedAt: new Date(),
-    },
-  });
 } 
