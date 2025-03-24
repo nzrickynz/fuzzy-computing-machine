@@ -6,8 +6,15 @@ declare global {
 
 const prisma = globalThis.prisma ?? new PrismaClient({
   log: ['error', 'warn'],
+  // Use a simpler configuration that works with Vercel
+  datasources: {
+    db: {
+      url: process.env.DATABASE_URL,
+    },
+  },
 });
 
+// In development, store the instance globally
 if (process.env.NODE_ENV !== 'production') {
   globalThis.prisma = prisma;
 }
