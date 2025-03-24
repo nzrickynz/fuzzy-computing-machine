@@ -36,7 +36,15 @@ export async function GET(request: Request) {
     const project = searchParams.get('project');
 
     // Ensure we have a valid connection
-    await prisma.$connect();
+    try {
+      await prisma.$connect();
+    } catch (connectionError) {
+      console.error('Failed to connect to database:', connectionError);
+      return NextResponse.json(
+        { error: 'Database connection failed. Please check your environment variables.' },
+        { status: 503 }
+      );
+    }
 
     const stashes = await prisma.stash.findMany({
       where: {
@@ -79,6 +87,14 @@ export async function GET(request: Request) {
       await prisma.$disconnect();
     } catch (disconnectError) {
       console.error('Error disconnecting from database:', disconnectError);
+    }
+
+    // Check if it's a database connection error
+    if (error instanceof Error && error.message.includes('Can\'t reach database server')) {
+      return NextResponse.json(
+        { error: 'Database connection failed. Please check your environment variables.' },
+        { status: 503 }
+      );
     }
 
     return NextResponse.json(
