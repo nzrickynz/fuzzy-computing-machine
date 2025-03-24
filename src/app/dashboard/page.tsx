@@ -19,6 +19,14 @@ function StashListWrapper({ stashes, isLoading }: { stashes: any[], isLoading: b
   );
 }
 
+function StashFormWrapper() {
+  return (
+    <div>
+      <StashForm />
+    </div>
+  );
+}
+
 export default async function DashboardPage({
   searchParams,
 }: PageProps) {
@@ -46,7 +54,9 @@ export default async function DashboardPage({
     <div className="container mx-auto px-4 py-8">
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
         <div className="lg:col-span-2">
-          <StashForm />
+          <Suspense>
+            <StashFormWrapper />
+          </Suspense>
           <Suspense fallback={<StashListWrapper stashes={[]} isLoading={true} />}>
             <StashListWrapper stashes={formattedStashes} isLoading={false} />
           </Suspense>
