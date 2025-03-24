@@ -2,7 +2,7 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import type { Prisma } from '@prisma/client';
 
 async function getUser() {
@@ -28,8 +28,6 @@ export async function getStashes(tag?: string, project?: string) {
   if (!user) {
     throw new Error('Unauthorized');
   }
-
-  const prisma = new PrismaClient();
   
   try {
     const stashes = await prisma.stash.findMany({
@@ -65,8 +63,6 @@ export async function getStashes(tag?: string, project?: string) {
   } catch (error) {
     console.error('Error fetching stashes:', error);
     throw error;
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -79,8 +75,6 @@ export async function createStash(text: string) {
   if (!text || typeof text !== 'string') {
     throw new Error('Invalid input');
   }
-
-  const prisma = new PrismaClient();
 
   try {
     // Extract hashtags and projects from text
@@ -127,8 +121,6 @@ export async function createStash(text: string) {
   } catch (error) {
     console.error('Error creating stash:', error);
     throw error;
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -137,8 +129,6 @@ export async function markStashAsUsed(id: string) {
   if (!user) {
     throw new Error('Unauthorized');
   }
-
-  const prisma = new PrismaClient();
 
   try {
     // Find the stash and verify ownership
@@ -164,7 +154,5 @@ export async function markStashAsUsed(id: string) {
   } catch (error) {
     console.error('Error marking stash as used:', error);
     throw error;
-  } finally {
-    await prisma.$disconnect();
   }
 } 
